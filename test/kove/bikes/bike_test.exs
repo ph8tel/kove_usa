@@ -46,7 +46,7 @@ defmodule Kove.Bikes.BikeTest do
         slug: "2026-kove-800x-rally",
         status: :street_legal,
         category: :adv,
-        msrp_cents: 1299900,
+        msrp_cents: 1_299_900,
         hero_image_url: "https://example.com/hero.jpg"
       }
 
@@ -119,7 +119,10 @@ defmodule Kove.Bikes.BikeTest do
       changeset = Bike.changeset(%Bike{}, attrs)
 
       assert {:error, changeset} = Kove.Repo.insert(changeset)
-      assert "has already been taken" in Enum.map(changeset.errors, fn {_field, {msg, _}} -> msg end)
+
+      assert "has already been taken" in Enum.map(changeset.errors, fn {_field, {msg, _}} ->
+               msg
+             end)
     end
   end
 end

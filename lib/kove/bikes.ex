@@ -26,7 +26,14 @@ defmodule Kove.Bikes do
 
     Bike
     |> where(slug: ^slug)
-    |> preload([:engine, :chassis_spec, :dimension, :bike_features, :images, descriptions: ^descriptions_query])
+    |> preload([
+      :engine,
+      :chassis_spec,
+      :dimension,
+      :bike_features,
+      :images,
+      descriptions: ^descriptions_query
+    ])
     |> Repo.one()
   end
 
@@ -38,7 +45,14 @@ defmodule Kove.Bikes do
     descriptions_query = from(d in Kove.Descriptions.Description, select: %{d | embedding: nil})
 
     Bike
-    |> preload([:engine, :chassis_spec, :dimension, :bike_features, :images, descriptions: ^descriptions_query])
+    |> preload([
+      :engine,
+      :chassis_spec,
+      :dimension,
+      :bike_features,
+      :images,
+      descriptions: ^descriptions_query
+    ])
     |> Repo.get!(id)
   end
 

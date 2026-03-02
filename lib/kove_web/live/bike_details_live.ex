@@ -11,10 +11,14 @@ defmodule KoveWeb.BikeDetailsLive do
         {:ok, redirect(socket, to: "/")}
 
       bike ->
+        sorted_images = Enum.sort_by(bike.images, & &1.position)
+
         {:ok,
          socket
          |> assign(:page_title, bike.name)
          |> assign(:bike, bike)
+         |> assign(:sorted_images, sorted_images)
+         |> assign(:current_image_index, 0)
          |> assign(:active_tab, :marketing)
          |> assign(:chat_messages, [])
          |> assign(:chat_loading, false)}
@@ -27,19 +31,77 @@ defmodule KoveWeb.BikeDetailsLive do
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-8">
       <%!-- Left Column: Bike Details (wider) --%>
       <div class="lg:col-span-2">
-        <%!-- Bike Image --%>
-        <div class="mb-6 rounded-lg overflow-hidden bg-base-300 aspect-video">
-          <img
-            :if={@bike.hero_image_url}
-            src={@bike.hero_image_url}
-            alt={@bike.name}
-            class="w-full h-full object-cover"
-          />
-          <div :if={!@bike.hero_image_url} class="flex items-center justify-center w-full h-full text-base-content/30">
-            <svg xmlns="http://www.w3.org/2000/svg" class="size-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
-            </svg>
-          </div>
+        <%!-- Bike Image Slider --%>
+        <div
+          id="image-slider"
+          class="mb-6 rounded-lg overflow-hidden bg-base-300 aspect-video relative group"
+        >
+          <%= if @sorted_images != [] do %>
+            <% current_image = Enum.at(@sorted_images, @current_image_index) %>
+            <img
+              src={current_image.url}
+              alt={current_image.alt || @bike.name}
+              class="w-full h-full object-cover"
+            />
+
+            <%!-- Prev / Next buttons (shown when more than 1 image) --%>
+            <%= if length(@sorted_images) > 1 do %>
+              <button
+                phx-click="prev_image"
+                class="btn btn-circle btn-sm bg-base-100/70 hover:bg-base-100 border-none absolute left-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Previous image"
+              >
+                <.icon name="hero-chevron-left" class="size-5" />
+              </button>
+              <button
+                phx-click="next_image"
+                class="btn btn-circle btn-sm bg-base-100/70 hover:bg-base-100 border-none absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Next image"
+              >
+                <.icon name="hero-chevron-right" class="size-5" />
+              </button>
+
+              <%!-- Dot indicators --%>
+              <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                <%= for {_img, idx} <- Enum.with_index(@sorted_images) do %>
+                  <button
+                    phx-click="goto_image"
+                    phx-value-index={idx}
+                    class={[
+                      "size-2.5 rounded-full transition-all",
+                      if(@current_image_index == idx,
+                        do: "bg-primary scale-110",
+                        else: "bg-base-content/40 hover:bg-base-content/60"
+                      )
+                    ]}
+                    aria-label={"Go to image #{idx + 1}"}
+                  />
+                <% end %>
+              </div>
+
+              <%!-- Counter --%>
+              <div class="absolute top-3 right-3 bg-base-100/70 text-base-content text-xs font-medium px-2 py-1 rounded-full">
+                {@current_image_index + 1} / {length(@sorted_images)}
+              </div>
+            <% end %>
+          <% else %>
+            <div class="flex items-center justify-center w-full h-full text-base-content/30">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="size-24"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z"
+                />
+              </svg>
+            </div>
+          <% end %>
         </div>
 
         <%!-- Bike Header Info --%>
@@ -180,7 +242,10 @@ defmodule KoveWeb.BikeDetailsLive do
           <%!-- Chassis Tab --%>
           <div :if={@active_tab == :chassis} class="space-y-6">
             <%!-- Chassis Specs --%>
-            <div :if={is_nil(@bike.chassis_spec) && is_nil(@bike.dimension)} class="text-base-content/50">
+            <div
+              :if={is_nil(@bike.chassis_spec) && is_nil(@bike.dimension)}
+              class="text-base-content/50"
+            >
               No chassis information available.
             </div>
             <div :if={@bike.chassis_spec}>
@@ -273,7 +338,9 @@ defmodule KoveWeb.BikeDetailsLive do
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div :if={@bike.dimension.weight}>
                   <h3 class="font-bold text-sm uppercase tracking-wide text-base-content/60 mb-1">
-                    Weight ({if @bike.dimension.weight_type, do: Atom.to_string(@bike.dimension.weight_type), else: ""})
+                    Weight ({if @bike.dimension.weight_type,
+                      do: Atom.to_string(@bike.dimension.weight_type),
+                      else: ""})
                   </h3>
                   <p class="text-lg">{@bike.dimension.weight}</p>
                 </div>
@@ -337,7 +404,10 @@ defmodule KoveWeb.BikeDetailsLive do
 
           <%!-- Chat Messages --%>
           <div id="chat-messages" phx-hook="ScrollBottom" class="flex-1 overflow-y-auto p-4 space-y-4">
-            <div :if={Enum.empty?(@chat_messages)} class="h-full flex flex-col items-center justify-center text-base-content/50 text-center text-sm gap-4">
+            <div
+              :if={Enum.empty?(@chat_messages)}
+              class="h-full flex flex-col items-center justify-center text-base-content/50 text-center text-sm gap-4"
+            >
               <div>
                 <p class="font-bold mb-2">Hey! I'm Kovy 👋</p>
                 <p>Ask me anything about the {@bike.name}.</p>
@@ -366,10 +436,17 @@ defmodule KoveWeb.BikeDetailsLive do
                 </button>
               </div>
             </div>
-            <div :for={msg <- @chat_messages} class={[
-              "flex",
-              if msg.role == :user do "justify-end" else "justify-start" end
-            ]}>
+            <div
+              :for={msg <- @chat_messages}
+              class={[
+                "flex",
+                if msg.role == :user do
+                  "justify-end"
+                else
+                  "justify-start"
+                end
+              ]}
+            >
               <div class={[
                 "max-w-xs rounded-lg px-4 py-2",
                 if msg.role == :user do
@@ -377,7 +454,11 @@ defmodule KoveWeb.BikeDetailsLive do
                 else
                   "bg-base-300 text-base-content"
                 end,
-                if Map.get(msg, :error) do "border border-error" else "" end
+                if Map.get(msg, :error) do
+                  "border border-error"
+                else
+                  ""
+                end
               ]}>
                 <p class="text-sm whitespace-pre-wrap">{msg.content}</p>
                 <span
@@ -394,7 +475,9 @@ defmodule KoveWeb.BikeDetailsLive do
               <input
                 type="text"
                 name="message"
-                placeholder={if @chat_loading, do: "Kovy is thinking…", else: "Ask about this bike..."}
+                placeholder={
+                  if @chat_loading, do: "Kovy is thinking…", else: "Ask about this bike..."
+                }
                 class="input input-bordered input-sm flex-1"
                 autocomplete="off"
                 disabled={@chat_loading}
@@ -414,6 +497,30 @@ defmodule KoveWeb.BikeDetailsLive do
   @impl true
   def handle_event("set_tab", %{"tab" => tab}, socket) do
     {:noreply, assign(socket, :active_tab, String.to_atom(tab))}
+  end
+
+  @impl true
+  def handle_event("prev_image", _params, socket) do
+    count = length(socket.assigns.sorted_images)
+    current = socket.assigns.current_image_index
+    new_index = if current == 0, do: count - 1, else: current - 1
+    {:noreply, assign(socket, :current_image_index, new_index)}
+  end
+
+  @impl true
+  def handle_event("next_image", _params, socket) do
+    count = length(socket.assigns.sorted_images)
+    current = socket.assigns.current_image_index
+    new_index = if current >= count - 1, do: 0, else: current + 1
+    {:noreply, assign(socket, :current_image_index, new_index)}
+  end
+
+  @impl true
+  def handle_event("goto_image", %{"index" => index}, socket) do
+    {idx, _} = Integer.parse(index)
+    count = length(socket.assigns.sorted_images)
+    idx = max(0, min(idx, count - 1))
+    {:noreply, assign(socket, :current_image_index, idx)}
   end
 
   @impl true

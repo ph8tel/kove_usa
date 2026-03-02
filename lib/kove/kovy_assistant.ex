@@ -47,7 +47,9 @@ defmodule Kove.KovyAssistant do
 
   @impl true
   def handle_cast({:send_message, bike, chat_history, caller_pid}, state) do
-    Logger.info("KovyAssistant: starting chat for #{bike.name}, history=#{length(chat_history)} msgs, caller=#{inspect(caller_pid)}")
+    Logger.info(
+      "KovyAssistant: starting chat for #{bike.name}, history=#{length(chat_history)} msgs, caller=#{inspect(caller_pid)}"
+    )
 
     Task.Supervisor.start_child(Kove.TaskSupervisor, fn ->
       groq = groq_module()
@@ -62,7 +64,10 @@ defmodule Kove.KovyAssistant do
             end)
         ]
 
-      Logger.info("KovyAssistant task: sending #{length(api_messages)} messages to Groq (key=#{if groq.api_key_available?(), do: "SET", else: "MISSING"})")
+      Logger.info(
+        "KovyAssistant task: sending #{length(api_messages)} messages to Groq (key=#{if groq.api_key_available?(), do: "SET", else: "MISSING"})"
+      )
+
       groq.stream_chat(api_messages, caller_pid)
     end)
 

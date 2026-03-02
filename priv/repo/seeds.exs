@@ -180,7 +180,10 @@ defmodule SeedHelpers do
     api_key = Application.get_env(:kove, :groq_api_key)
 
     if is_nil(api_key) do
-      IO.warn("⚠️  GROQ_API_KEY not set - skipping embeddings for: #{String.slice(text, 0..50)}...")
+      IO.warn(
+        "⚠️  GROQ_API_KEY not set - skipping embeddings for: #{String.slice(text, 0..50)}..."
+      )
+
       nil
     else
       try do
@@ -192,7 +195,9 @@ defmodule SeedHelpers do
           {:error, _} ->
             # Fallback to nomic-embed-text if OpenAI model not supported
             case call_groq_api(text, api_key, "nomic-embed-text") do
-              {:ok, embedding} -> embedding
+              {:ok, embedding} ->
+                embedding
+
               {:error, reason} ->
                 IO.warn("Failed to get embedding: #{reason}")
                 nil
@@ -401,9 +406,7 @@ Enum.each(bikes_data, fn product ->
 
   # Insert the bike
   bike =
-    Repo.insert!(
-      Kove.Bikes.Bike.changeset(%Kove.Bikes.Bike{}, bike_attrs)
-    )
+    Repo.insert!(Kove.Bikes.Bike.changeset(%Kove.Bikes.Bike{}, bike_attrs))
 
   IO.puts("  ✓ #{product_name}")
 
@@ -444,9 +447,9 @@ Enum.each(bikes_data, fn product ->
   # ========================================================================
 
   dimensions_data = specs["dimensions"] || %{}
-  {weight, weight_type} = SeedHelpers.parse_weight(
-    dimensions_data["dry_weight"] || dimensions_data["curb_weight"]
-  )
+
+  {weight, weight_type} =
+    SeedHelpers.parse_weight(dimensions_data["dry_weight"] || dimensions_data["curb_weight"])
 
   dimensions_attrs = %{
     bike_id: bike.id,
@@ -499,9 +502,7 @@ Enum.each(bikes_data, fn product ->
       is_hero: position == 1
     }
 
-    Repo.insert!(
-      Kove.Images.Image.changeset(%Kove.Images.Image{}, image_attrs)
-    )
+    Repo.insert!(Kove.Images.Image.changeset(%Kove.Images.Image{}, image_attrs))
   end)
 
   # ========================================================================

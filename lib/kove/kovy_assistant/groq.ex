@@ -37,7 +37,11 @@ defmodule Kove.KovyAssistant.Groq do
   def stream_chat(messages, caller_pid) do
     case api_key() do
       nil ->
-        send(caller_pid, {:kovy_error, "GROQ_API_KEY not configured. Set the environment variable and restart."})
+        send(
+          caller_pid,
+          {:kovy_error, "GROQ_API_KEY not configured. Set the environment variable and restart."}
+        )
+
         :error
 
       key ->
