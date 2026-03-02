@@ -32,7 +32,7 @@ defmodule KoveWeb.StorefrontLive do
             KOVE MOTO <span class="text-primary">USA</span>
           </h1>
           <p class="mt-4 text-lg text-base-content/60 max-w-2xl mx-auto">
-            Adventure, Rally &amp; Motocross motorcycles engineered for riders who push boundaries.
+            Touch the Dream
           </p>
         </section>
 

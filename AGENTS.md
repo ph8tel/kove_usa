@@ -4,8 +4,8 @@ This is **Kove Moto USA** — a Phoenix 1.8 / LiveView 1.1 motorcycle catalog wi
 
 Kove Moto USA is a product catalog for Kove motorcycles sold in the US market. It has:
 
-- A **storefront** (`/`) showing a 2×3 grid of bike cards
-- **Bike detail pages** (`/bikes/:slug`) with spec tabs (Marketing, Engine, Chassis) and a streaming AI chat panel
+- A **storefront** (`/`) showing a 2×3 grid of bike cards plus a catalog-wide streaming Kovy chat panel
+- **Bike detail pages** (`/bikes/:slug`) with spec tabs (Marketing, Engine, Chassis) and the same streaming Kovy chat UI in single-bike context
 - **Kovy**, an AI assistant backed by Groq's `llama-3.3-70b-versatile` model that answers questions grounded in real bike spec data
 
 ## Key Architecture Decisions
@@ -13,9 +13,10 @@ Kove Moto USA is a product catalog for Kove motorcycles sold in the US market. I
 - **No auth yet** — all pages are public
 - **Groq module is swappable** via `config :kove, :groq_module` (defaults to `Kove.KovyAssistant.Groq`, replaced by `GroqMock` in tests via Mox)
 - **Chat is streaming** — Groq SSE chunks flow: Task → `send(caller_pid, {:kovy_chunk, text})` → LiveView `handle_info` → assign update → re-render
-- **pgvector** extension is enabled but embeddings are not yet populated
+- **Shared `ChatLive` LiveComponent** renders both desktop panel and mobile FAB/drawer; parent LiveViews own state via `handle_info`
+- **Storefront chat uses pseudo-RAG** — keyword matching (`Prompt.relevant_bikes/2`) selects which bikes get full detail context per message
+- **pgvector** extension is enabled but embeddings are not yet populated; description preloads explicitly exclude the vector column to reduce DB transfer/memory
 - **daisyUI 5** on Tailwind CSS 4.1 — use daisyUI component classes (`btn`, `card`, `tabs`, `input`, etc.)
-- **No LiveComponents** — chat and tabs are handled directly in `BikeDetailsLive`
 
 ## Database Schema
 
@@ -29,7 +30,7 @@ engines (1) ──< bikes (1) ──< chassis_specs
 ```
 
 8 Ecto schemas in `lib/kove/`: Bike, Engine, ChassisSpec, Dimension, BikeFeature, Image, Description, Order.
-Context module: `Kove.Bikes` (`list_bikes/0`, `get_bike_by_slug/1`, `get_bike!/1`, `hero_image_url/1`, `format_msrp/1`).
+Context module: `Kove.Bikes` (`list_bikes/0`, `list_bikes_full/0`, `get_bike_by_slug/1`, `get_bike!/1`, `hero_image_url/1`, `format_msrp/1`).
 
 ## Supervision Tree
 
@@ -46,16 +47,21 @@ Kove.Supervisor (one_for_one)
 
 ## KovyAssistant Chat Flow
 
-1. `BikeDetailsLive` receives `"send_message"` event → calls `KovyAssistant.send_message(bike, history, self())`
-2. `KovyAssistant` (GenServer) casts → `Task.Supervisor.start_child` with an async function
-3. Task calls `Prompt.build_system_prompt(bike)` to serialize all bike data into LLM context
-4. Task calls `groq_module().stream_chat(messages, caller_pid)` — streams SSE from Groq API
-5. Each SSE chunk sends `{:kovy_chunk, text}` to the LiveView pid; `:kovy_done` / `:kovy_error` at end
-6. `BikeDetailsLive.handle_info` updates `chat_messages` assigns → LiveView re-renders the chat bubble
+1. `ChatLive` receives `"send_message"` / `"toggle_chat"` and relays to parent via `send(self(), {:chat_send, msg})` / `send(self(), :chat_toggle)`
+2. Parent LiveView handles `{:chat_send, msg}`:
+  - `BikeDetailsLive` → `KovyAssistant.send_message(bike, history, self())`
+  - `StorefrontLive` → `KovyAssistant.send_catalog_message(bikes_full, history, self())`
+3. `KovyAssistant` (GenServer) casts → `Task.Supervisor.start_child` with an async function
+4. Task builds prompt:
+  - single-bike: `Prompt.build_system_prompt/1`
+  - catalog: `Prompt.build_catalog_system_prompt/2` (summary of all bikes + detailed specs only for keyword-matched bikes)
+5. Task calls `groq_module().stream_chat(messages, caller_pid)` — streams SSE from Groq API
+6. Each SSE chunk sends `{:kovy_chunk, text}` to the LiveView pid; `:kovy_done` / `:kovy_error` at end
+7. Parent LiveView `handle_info` updates `chat_messages`/`chat_loading`/`chat_open` assigns → component re-renders
 
 ## Testing
 
-- **90 tests** across 15 files, all passing
+- **137 tests** across app/context/liveview layers, all passing
 - **Mox** is used for the Groq client — `GroqBehaviour` defines the contract, `GroqMock` replaces it in test env
 - Tests that exercise the GenServer → Task pipeline use `set_mox_global` (not async) because Mox expectations must cross process boundaries
 - Schema tests validate changesets and constraints for all 8 schemas
@@ -84,8 +90,9 @@ lib/kove/
 lib/kove_web/
 ├── router.ex                   # "/" → StorefrontLive, "/bikes/:slug" → BikeDetailsLive
 ├── live/
-│   ├── storefront_live.ex      # Bike grid with cards
-│   └── bike_details_live.ex    # Spec tabs + Kovy streaming chat (~480 lines)
+│   ├── storefront_live.ex      # Bike grid + catalog-wide Kovy chat orchestration
+│   ├── bike_details_live.ex    # Spec tabs + single-bike Kovy chat orchestration
+│   └── chat_live.ex            # Shared chat UI component (desktop panel + mobile drawer/FAB)
 ├── components/
 │   ├── core_components.ex
 │   └── layouts.ex
@@ -112,7 +119,7 @@ assets/js/app.js                # ScrollBottom hook for chat auto-scroll
 - Use the already included and available `:req` (`Req`) library for HTTP requests, **avoid** `:httpoison`, `:tesla`, and `:httpc`. Req is included by default and is the preferred HTTP client for Phoenix apps
 - When adding new Groq-dependent logic, always go through the `GroqBehaviour` so it stays testable with Mox
 - When modifying prompt construction, run the prompt tests: `mix test test/kove/kovy_assistant/prompt_test.exs`
-- Bike detail page is ~480 lines — prefer keeping chat logic in `handle_info`/`handle_event` callbacks rather than extracting LiveComponents
+- Reuse `KoveWeb.ChatLive` for chat UI changes; keep streaming/state orchestration in parent LiveView `handle_info` callbacks
 ### Phoenix v1.8 guidelines
 
 - **Always** begin your LiveView templates with `<Layouts.app flash={@flash} ...>` which wraps all inner content

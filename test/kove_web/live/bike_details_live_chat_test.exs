@@ -226,8 +226,8 @@ defmodule KoveWeb.BikeDetailsLiveChatTest do
     test "set_tab event switches active tab", %{conn: conn, bike: bike} do
       {:ok, view, html} = live(conn, ~p"/bikes/#{bike.slug}")
 
-      # Default tab is marketing
-      assert html =~ "Marketing"
+      # Default tab is description
+      assert html =~ "Description"
 
       html =
         view
