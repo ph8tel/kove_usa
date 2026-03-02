@@ -118,7 +118,7 @@ defmodule Kove.BikesFixtures do
       rear_wheel: "18\" Spoke Wheel"
     }
 
-    {:ok, chassis} =
+    {:ok, _chassis} =
       %ChassisSpec{}
       |> ChassisSpec.changeset(Map.merge(chassis_defaults, chassis_attrs))
       |> Repo.insert()
@@ -133,7 +133,7 @@ defmodule Kove.BikesFixtures do
       wet_weight: "225kg"
     }
 
-    {:ok, dimension} =
+    {:ok, _dimension} =
       %Dimension{}
       |> Dimension.changeset(Map.merge(dimension_defaults, dimension_attrs))
       |> Repo.insert()
