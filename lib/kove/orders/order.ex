@@ -1,4 +1,12 @@
 defmodule Kove.Orders.Order do
+  @moduledoc """
+  Order schema for future e-commerce features.
+
+  ## Status: Future Feature
+
+  This module is currently unused but retained as a placeholder
+  for planned order management and lead capture functionality.
+  """
   use Ecto.Schema
   import Ecto.Changeset
 
