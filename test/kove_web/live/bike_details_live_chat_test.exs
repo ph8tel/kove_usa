@@ -22,9 +22,7 @@ defmodule KoveWeb.BikeDetailsLiveChatTest do
     }
 
     {:ok, engine} =
-      Kove.Repo.insert(
-        Kove.Engines.Engine.changeset(%Kove.Engines.Engine{}, engine_attrs)
-      )
+      Kove.Repo.insert(Kove.Engines.Engine.changeset(%Kove.Engines.Engine{}, engine_attrs))
 
     bike_attrs = %{
       engine_id: engine.id,
