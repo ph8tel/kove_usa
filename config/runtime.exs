@@ -33,7 +33,7 @@ if config_env() == :prod do
   config :kove, Kove.Repo,
     # ssl: true,
     url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "2"),
     # For machines with several cores, consider starting multiple pools of `pool_size`
     # pool_count: 4,
     socket_options: maybe_ipv6
@@ -122,7 +122,7 @@ end
 groq_key =
   System.get_env("GROQ_API_KEY") ||
     (
-      env_path = Path.expand("../../.env", __DIR__)
+      env_path = Path.expand("../.env", __DIR__)
 
       if File.exists?(env_path) do
         env_path

@@ -1,1 +1,60 @@
+# Dependencies
+deps/
+_build/
+
+# Elixir Language Server
+.elixir_ls/
+
+# Generate on crash by the VM
+erl_crash.dump
+
+# Static artifacts
+assets/node_modules/
+priv/static/
+
+# Since we are building assets from assets/,
+# we ignore priv/static. You may want to comment
+# this depending on your deployment strategy.
+
+# Files matching conf.exs pattern contain sensitive data and you
+# should not commit them into version control.
+#
+# Alternatively, you may comment the line below and commit the
+# secrets file. You can `git update-index --skip-worktree` to make git
+# ignore this file (however sometimes this causes problems with bors trying to
+# merge files)
+#/config/runtime.exs
+
+# Ignore digested assets cache
+priv/static/cache_manifest.json
+
+# In case you use Node.js/npm, you want to ignore these.
+npm-debug.log
+yarn-error.log
+
+# The directory NPM downloads your dependencies sources to.
+/assets/node_modules/
+
+# Since we are building from assets/,
+# we ignore priv/static. You may want to comment
+# this depending on your deployment strategy.
+/priv/static/
+
+# Ignore your .env file
 .env
+.env.local
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test coverage
+cover/
+.coverage
+
+# Local environment
+.tool-versions

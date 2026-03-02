@@ -1,0 +1,41 @@
+# Ignore git
+.git
+.gitignore
+
+# Ignore build artifacts
+_build
+deps
+
+# Ignore OS/editor files
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode
+.elixir_ls
+
+# Ignore environment files
+.env
+.env.*
+!.env.example
+
+# Ignore Docker/Fly files (not needed inside the image)
+Dockerfile*
+docker-compose*
+fly.toml
+.dockerignore
+
+# Ignore project docs/artifacts
+AGENTS.md
+PLAN.md
+README.md
+FEATURE_ANALYSIS.md
+steps.md
+bijes.json
+erl_crash.dump
+
+# Ignore test files
+test/
+
+# Ignore CI/CD
+.github

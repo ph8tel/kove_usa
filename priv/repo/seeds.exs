@@ -18,7 +18,7 @@ alias Kove.Repo
 # ============================================================================
 
 # Read and parse the bijes.json file
-bijes_path = Path.expand("../../../bijes.json", __DIR__)
+bijes_path = Path.expand("../../bijes.json", __DIR__)
 
 unless File.exists?(bijes_path) do
   raise "bijes.json not found at #{bijes_path}"
@@ -244,6 +244,23 @@ defmodule SeedHelpers do
     end
   end
 end
+
+# ============================================================================
+# CLEAN EXISTING DATA (makes seeds idempotent / re-runnable)
+# ============================================================================
+
+IO.puts("Clearing existing seed data...")
+
+Repo.delete_all(Kove.Orders.Order)
+Repo.delete_all(Kove.Descriptions.Description)
+Repo.delete_all(Kove.Images.Image)
+Repo.delete_all(Kove.BikeFeatures.BikeFeature)
+Repo.delete_all(Kove.Dimensions.Dimension)
+Repo.delete_all(Kove.ChassisSpecs.ChassisSpec)
+Repo.delete_all(Kove.Bikes.Bike)
+Repo.delete_all(Kove.Engines.Engine)
+
+IO.puts("Existing data cleared.")
 
 # ============================================================================
 # CREATE ENGINE PLATFORMS

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "timestamp": 1772402608685,
+  "timestamp": 1772424973965,
   "workspaceRoot": "/home/ph8l/share/kove_usa",
   "registries": {
     "components": {
@@ -256,13 +256,13 @@
           ]
         ],
         [
-          "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
+          "/home/ph8l/share/kove_usa/lib/kove_web/components/core_components.ex",
           [
             {
               "name": "icon",
               "moduleName": "KoveWeb.CoreComponents",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
-              "line": 416,
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/components/core_components.ex",
+              "line": 410,
               "attributes": [
                 {
                   "name": "class",
@@ -283,8 +283,8 @@
             {
               "name": "list",
               "moduleName": "KoveWeb.CoreComponents",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
-              "line": 382,
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/components/core_components.ex",
+              "line": 376,
               "attributes": [],
               "slots": [
                 {
@@ -293,7 +293,7 @@
                   "attributes": [
                     {
                       "default": null,
-                      "line": 379,
+                      "line": 373,
                       "name": "title",
                       "type": "string",
                       "values": null,
@@ -307,14 +307,14 @@
             {
               "name": "table",
               "moduleName": "KoveWeb.CoreComponents",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
-              "line": 330,
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/components/core_components.ex",
+              "line": 324,
               "attributes": [
                 {
                   "name": "row_item",
                   "type": "any",
                   "required": false,
-                  "default": "{:&, [line: 321, column: 14], [{:/, [line: 321, column: 32], [{{:., [line: 321, column: 23], [{:__aliases__, [last: [line: 321, column: 15], line: 321, column: 15], [:Function]}, :identity]}, [no_parens: true, line: 321, column: 24], []}, 1]}]}",
+                  "default": "{:&, [line: 315, column: 14], [{:/, [line: 315, column: 32], [{{:., [line: 315, column: 23], [{:__aliases__, [last: [line: 315, column: 15], line: 315, column: 15], [:Function]}, :identity]}, [no_parens: true, line: 315, column: 24], []}, 1]}]}",
                   "doc": "the function for mapping each row before calling the :col and :action slots",
                   "rawType": "any"
                 },
@@ -360,7 +360,7 @@
                   "attributes": [
                     {
                       "default": null,
-                      "line": 325,
+                      "line": 319,
                       "name": "label",
                       "type": "string",
                       "values": null,
@@ -374,8 +374,8 @@
             {
               "name": "header",
               "moduleName": "KoveWeb.CoreComponents",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
-              "line": 289,
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/components/core_components.ex",
+              "line": 283,
               "attributes": [],
               "slots": [
                 {
@@ -398,8 +398,8 @@
             {
               "name": "input",
               "moduleName": "KoveWeb.CoreComponents",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
-              "line": 170,
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/components/core_components.ex",
+              "line": 164,
               "attributes": [
                 {
                   "name": "rest",
@@ -462,10 +462,10 @@
                 },
                 {
                   "name": "field",
-                  "type": "{:__aliases__, [last: [line: 155, column: 29], line: 155, column: 16], [:Phoenix, :HTML, :FormField]}",
+                  "type": "{:__aliases__, [last: [line: 149, column: 29], line: 149, column: 16], [:Phoenix, :HTML, :FormField]}",
                   "required": false,
                   "doc": "a form field struct retrieved from the form, for example: @form[:email]",
-                  "rawType": "{:__aliases__, [last: [line: 155, column: 29], line: 155, column: 16], [:Phoenix, :HTML, :FormField]}"
+                  "rawType": "{:__aliases__, [last: [line: 149, column: 29], line: 149, column: 16], [:Phoenix, :HTML, :FormField]}"
                 },
                 {
                   "name": "type",
@@ -506,8 +506,8 @@
             {
               "name": "button",
               "moduleName": "KoveWeb.CoreComponents",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
-              "line": 96,
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/components/core_components.ex",
+              "line": 90,
               "attributes": [
                 {
                   "name": "variant",
@@ -539,8 +539,8 @@
             {
               "name": "flash",
               "moduleName": "KoveWeb.CoreComponents",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
-              "line": 50,
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/components/core_components.ex",
+              "line": 44,
               "attributes": [
                 {
                   "name": "rest",
@@ -571,7 +571,7 @@
                   "name": "flash",
                   "type": "map",
                   "required": false,
-                  "default": "{:%{}, [closing: [line: 43, column: 33], line: 43, column: 31], []}",
+                  "default": "{:%{}, [closing: [line: 37, column: 33], line: 37, column: 31], []}",
                   "doc": "the map of flash messages to display",
                   "rawType": "map"
                 },
@@ -595,21 +595,21 @@
           ]
         ],
         [
-          "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/layouts.ex",
+          "/home/ph8l/share/kove_usa/lib/kove_web/components/layouts.ex",
           [
             {
               "name": "theme_toggle",
               "moduleName": "KoveWeb.Layouts",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/layouts.ex",
-              "line": 123,
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/components/layouts.ex",
+              "line": 116,
               "attributes": [],
               "slots": []
             },
             {
               "name": "flash_group",
               "moduleName": "KoveWeb.Layouts",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/layouts.ex",
-              "line": 85,
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/components/layouts.ex",
+              "line": 78,
               "attributes": [
                 {
                   "name": "id",
@@ -632,7 +632,7 @@
             {
               "name": "app",
               "moduleName": "KoveWeb.Layouts",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/layouts.ex",
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/components/layouts.ex",
               "line": 36,
               "attributes": [
                 {
@@ -662,111 +662,1323 @@
           ]
         ],
         [
-          "/home/ph8l/share/kove_usa/kove/mix.exs",
+          "/home/ph8l/share/kove_usa/lib/kove_web/controllers/error_html.ex",
           []
         ],
         [
-          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/error_html.ex",
-          []
-        ],
-        [
-          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html.ex",
+          "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html.ex",
           []
         ]
       ],
       "fileHashes": {
-        "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex": "0f12cf01ecf232c20b02a9e0acdbbec8e902e3f3",
-        "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/layouts.ex": "1e068affb52129557c9b76909cb90473c2ce8ab7",
-        "/home/ph8l/share/kove_usa/kove/mix.exs": "2844b6883d5743cb5d7e071878fe1dc3c3be5193",
-        "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/error_html.ex": "b2e23646135a8d9b4a51fceca0e822c26d21893b",
-        "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html.ex": "09c40480d0bf7d820d37ae5cb5cfc4385cd51ef4"
+        "/home/ph8l/share/kove_usa/lib/kove_web/components/core_components.ex": "fdd2bce27e203f012be68d8659031ccd9affbdca",
+        "/home/ph8l/share/kove_usa/lib/kove_web/components/layouts.ex": "b62128d7ce56533c615202aafea3c2509d51138f",
+        "/home/ph8l/share/kove_usa/lib/kove_web/controllers/error_html.ex": "b2e23646135a8d9b4a51fceca0e822c26d21893b",
+        "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html.ex": "09c40480d0bf7d820d37ae5cb5cfc4385cd51ef4"
       },
       "workspaceRoot": "/home/ph8l/share/kove_usa"
     },
     "schemas": {
-      "schemas": [],
-      "schemasByFile": [],
-      "fileHashes": {},
+      "schemas": [
+        [
+          "Kove.BikeFeatures.BikeFeature",
+          {
+            "moduleName": "Kove.BikeFeatures.BikeFeature",
+            "tableName": "bike_features",
+            "fields": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "position",
+                "type": "integer"
+              },
+              {
+                "name": "bike",
+                "type": "assoc",
+                "elixirType": "Kove.Bikes.Bike"
+              },
+              {
+                "name": "inserted_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "updated_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "id",
+                "type": "id"
+              }
+            ],
+            "associations": {},
+            "associationsDetailed": [
+              {
+                "fieldName": "bike",
+                "targetModule": "Kove.Bikes.Bike",
+                "type": "belongs_to"
+              }
+            ],
+            "aliases": {},
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove/bike_features/bike_feature.ex",
+            "line": 5
+          }
+        ],
+        [
+          "Kove.Bikes.Bike",
+          {
+            "moduleName": "Kove.Bikes.Bike",
+            "tableName": "bikes",
+            "fields": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "year",
+                "type": "integer"
+              },
+              {
+                "name": "variant",
+                "type": "string"
+              },
+              {
+                "name": "slug",
+                "type": "string"
+              },
+              {
+                "name": "msrp_cents",
+                "type": "integer"
+              },
+              {
+                "name": "hero_image_url",
+                "type": "string"
+              },
+              {
+                "name": "exhaust_override",
+                "type": "string"
+              },
+              {
+                "name": "sprocket_override",
+                "type": "string"
+              },
+              {
+                "name": "ecu_override",
+                "type": "string"
+              },
+              {
+                "name": "engine",
+                "type": "assoc",
+                "elixirType": "Kove.Engines.Engine"
+              },
+              {
+                "name": "chassis_spec",
+                "type": "assoc",
+                "elixirType": "Kove.ChassisSpecs.ChassisSpec"
+              },
+              {
+                "name": "dimension",
+                "type": "assoc",
+                "elixirType": "Kove.Dimensions.Dimension"
+              },
+              {
+                "name": "bike_features",
+                "type": "list",
+                "elixirType": "Kove.BikeFeatures.BikeFeature"
+              },
+              {
+                "name": "images",
+                "type": "list",
+                "elixirType": "Kove.Images.Image"
+              },
+              {
+                "name": "descriptions",
+                "type": "list",
+                "elixirType": "Kove.Descriptions.Description"
+              },
+              {
+                "name": "inserted_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "updated_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "id",
+                "type": "id"
+              }
+            ],
+            "associations": {},
+            "associationsDetailed": [
+              {
+                "fieldName": "engine",
+                "targetModule": "Kove.Engines.Engine",
+                "type": "belongs_to"
+              },
+              {
+                "fieldName": "chassis_spec",
+                "targetModule": "Kove.ChassisSpecs.ChassisSpec",
+                "type": "has_one"
+              },
+              {
+                "fieldName": "dimension",
+                "targetModule": "Kove.Dimensions.Dimension",
+                "type": "has_one"
+              },
+              {
+                "fieldName": "bike_features",
+                "targetModule": "Kove.BikeFeatures.BikeFeature",
+                "type": "has_many"
+              },
+              {
+                "fieldName": "images",
+                "targetModule": "Kove.Images.Image",
+                "type": "has_many"
+              },
+              {
+                "fieldName": "descriptions",
+                "targetModule": "Kove.Descriptions.Description",
+                "type": "has_many"
+              }
+            ],
+            "aliases": {},
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove/bikes/bike.ex",
+            "line": 5
+          }
+        ],
+        [
+          "Kove.ChassisSpecs.ChassisSpec",
+          {
+            "moduleName": "Kove.ChassisSpecs.ChassisSpec",
+            "tableName": "chassis_specs",
+            "fields": [
+              {
+                "name": "frame_type",
+                "type": "string"
+              },
+              {
+                "name": "front_suspension",
+                "type": "string"
+              },
+              {
+                "name": "front_travel",
+                "type": "string"
+              },
+              {
+                "name": "rear_suspension",
+                "type": "string"
+              },
+              {
+                "name": "rear_travel",
+                "type": "string"
+              },
+              {
+                "name": "front_brake",
+                "type": "string"
+              },
+              {
+                "name": "rear_brake",
+                "type": "string"
+              },
+              {
+                "name": "abs_system",
+                "type": "string"
+              },
+              {
+                "name": "wheels",
+                "type": "string"
+              },
+              {
+                "name": "tires",
+                "type": "string"
+              },
+              {
+                "name": "steering_angle",
+                "type": "string"
+              },
+              {
+                "name": "rake_angle",
+                "type": "string"
+              },
+              {
+                "name": "triple_clamp",
+                "type": "string"
+              },
+              {
+                "name": "bike",
+                "type": "assoc",
+                "elixirType": "Kove.Bikes.Bike"
+              },
+              {
+                "name": "inserted_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "updated_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "id",
+                "type": "id"
+              }
+            ],
+            "associations": {},
+            "associationsDetailed": [
+              {
+                "fieldName": "bike",
+                "targetModule": "Kove.Bikes.Bike",
+                "type": "belongs_to"
+              }
+            ],
+            "aliases": {},
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove/chassis_specs/chassis_spec.ex",
+            "line": 5
+          }
+        ],
+        [
+          "Kove.Descriptions.Description",
+          {
+            "moduleName": "Kove.Descriptions.Description",
+            "tableName": "descriptions",
+            "fields": [
+              {
+                "name": "body",
+                "type": "string"
+              },
+              {
+                "name": "position",
+                "type": "integer"
+              },
+              {
+                "name": "bike",
+                "type": "assoc",
+                "elixirType": "Kove.Bikes.Bike"
+              },
+              {
+                "name": "inserted_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "updated_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "id",
+                "type": "id"
+              }
+            ],
+            "associations": {},
+            "associationsDetailed": [
+              {
+                "fieldName": "bike",
+                "targetModule": "Kove.Bikes.Bike",
+                "type": "belongs_to"
+              }
+            ],
+            "aliases": {},
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove/descriptions/description.ex",
+            "line": 5
+          }
+        ],
+        [
+          "Kove.Dimensions.Dimension",
+          {
+            "moduleName": "Kove.Dimensions.Dimension",
+            "tableName": "dimensions",
+            "fields": [
+              {
+                "name": "weight",
+                "type": "string"
+              },
+              {
+                "name": "fuel_capacity",
+                "type": "string"
+              },
+              {
+                "name": "estimated_range",
+                "type": "string"
+              },
+              {
+                "name": "overall_size",
+                "type": "string"
+              },
+              {
+                "name": "wheelbase",
+                "type": "string"
+              },
+              {
+                "name": "seat_height",
+                "type": "string"
+              },
+              {
+                "name": "ground_clearance",
+                "type": "string"
+              },
+              {
+                "name": "bike",
+                "type": "assoc",
+                "elixirType": "Kove.Bikes.Bike"
+              },
+              {
+                "name": "inserted_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "updated_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "id",
+                "type": "id"
+              }
+            ],
+            "associations": {},
+            "associationsDetailed": [
+              {
+                "fieldName": "bike",
+                "targetModule": "Kove.Bikes.Bike",
+                "type": "belongs_to"
+              }
+            ],
+            "aliases": {},
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove/dimensions/dimension.ex",
+            "line": 5
+          }
+        ],
+        [
+          "Kove.Engines.Engine",
+          {
+            "moduleName": "Kove.Engines.Engine",
+            "tableName": "engines",
+            "fields": [
+              {
+                "name": "platform_name",
+                "type": "string"
+              },
+              {
+                "name": "engine_type",
+                "type": "string"
+              },
+              {
+                "name": "displacement",
+                "type": "string"
+              },
+              {
+                "name": "bore_x_stroke",
+                "type": "string"
+              },
+              {
+                "name": "cooling",
+                "type": "string"
+              },
+              {
+                "name": "compression_ratio",
+                "type": "string"
+              },
+              {
+                "name": "fuel_system",
+                "type": "string"
+              },
+              {
+                "name": "transmission",
+                "type": "string"
+              },
+              {
+                "name": "clutch",
+                "type": "string"
+              },
+              {
+                "name": "starter",
+                "type": "string"
+              },
+              {
+                "name": "max_power",
+                "type": "string"
+              },
+              {
+                "name": "max_torque",
+                "type": "string"
+              },
+              {
+                "name": "bikes",
+                "type": "list",
+                "elixirType": "Kove.Bikes.Bike"
+              },
+              {
+                "name": "inserted_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "updated_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "id",
+                "type": "id"
+              }
+            ],
+            "associations": {},
+            "associationsDetailed": [
+              {
+                "fieldName": "bikes",
+                "targetModule": "Kove.Bikes.Bike",
+                "type": "has_many"
+              }
+            ],
+            "aliases": {},
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove/engines/engine.ex",
+            "line": 5
+          }
+        ],
+        [
+          "Kove.Images.Image",
+          {
+            "moduleName": "Kove.Images.Image",
+            "tableName": "images",
+            "fields": [
+              {
+                "name": "alt",
+                "type": "string"
+              },
+              {
+                "name": "url",
+                "type": "string"
+              },
+              {
+                "name": "position",
+                "type": "integer"
+              },
+              {
+                "name": "is_hero",
+                "type": "boolean"
+              },
+              {
+                "name": "bike",
+                "type": "assoc",
+                "elixirType": "Kove.Bikes.Bike"
+              },
+              {
+                "name": "inserted_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "updated_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "id",
+                "type": "id"
+              }
+            ],
+            "associations": {},
+            "associationsDetailed": [
+              {
+                "fieldName": "bike",
+                "targetModule": "Kove.Bikes.Bike",
+                "type": "belongs_to"
+              }
+            ],
+            "aliases": {},
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove/images/image.ex",
+            "line": 5
+          }
+        ],
+        [
+          "Kove.Orders.Order",
+          {
+            "moduleName": "Kove.Orders.Order",
+            "tableName": "orders",
+            "fields": [
+              {
+                "name": "customer_name",
+                "type": "string"
+              },
+              {
+                "name": "customer_email",
+                "type": "string"
+              },
+              {
+                "name": "customer_phone",
+                "type": "string"
+              },
+              {
+                "name": "notes",
+                "type": "string"
+              },
+              {
+                "name": "bike",
+                "type": "assoc",
+                "elixirType": "Kove.Bikes.Bike"
+              },
+              {
+                "name": "inserted_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "updated_at",
+                "type": "naive_datetime"
+              },
+              {
+                "name": "id",
+                "type": "id"
+              }
+            ],
+            "associations": {},
+            "associationsDetailed": [
+              {
+                "fieldName": "bike",
+                "targetModule": "Kove.Bikes.Bike",
+                "type": "belongs_to"
+              }
+            ],
+            "aliases": {},
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove/orders/order.ex",
+            "line": 5
+          }
+        ]
+      ],
+      "schemasByFile": [
+        [
+          "/home/ph8l/share/kove_usa/lib/kove/bike_features/bike_feature.ex",
+          [
+            {
+              "moduleName": "Kove.BikeFeatures.BikeFeature",
+              "tableName": "bike_features",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "position",
+                  "type": "integer"
+                },
+                {
+                  "name": "bike",
+                  "type": "assoc",
+                  "elixirType": "Kove.Bikes.Bike"
+                },
+                {
+                  "name": "inserted_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "updated_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "id",
+                  "type": "id"
+                }
+              ],
+              "associations": {},
+              "associationsDetailed": [
+                {
+                  "fieldName": "bike",
+                  "targetModule": "Kove.Bikes.Bike",
+                  "type": "belongs_to"
+                }
+              ],
+              "aliases": {},
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove/bike_features/bike_feature.ex",
+              "line": 5
+            }
+          ]
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove/bikes/bike.ex",
+          [
+            {
+              "moduleName": "Kove.Bikes.Bike",
+              "tableName": "bikes",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "year",
+                  "type": "integer"
+                },
+                {
+                  "name": "variant",
+                  "type": "string"
+                },
+                {
+                  "name": "slug",
+                  "type": "string"
+                },
+                {
+                  "name": "msrp_cents",
+                  "type": "integer"
+                },
+                {
+                  "name": "hero_image_url",
+                  "type": "string"
+                },
+                {
+                  "name": "exhaust_override",
+                  "type": "string"
+                },
+                {
+                  "name": "sprocket_override",
+                  "type": "string"
+                },
+                {
+                  "name": "ecu_override",
+                  "type": "string"
+                },
+                {
+                  "name": "engine",
+                  "type": "assoc",
+                  "elixirType": "Kove.Engines.Engine"
+                },
+                {
+                  "name": "chassis_spec",
+                  "type": "assoc",
+                  "elixirType": "Kove.ChassisSpecs.ChassisSpec"
+                },
+                {
+                  "name": "dimension",
+                  "type": "assoc",
+                  "elixirType": "Kove.Dimensions.Dimension"
+                },
+                {
+                  "name": "bike_features",
+                  "type": "list",
+                  "elixirType": "Kove.BikeFeatures.BikeFeature"
+                },
+                {
+                  "name": "images",
+                  "type": "list",
+                  "elixirType": "Kove.Images.Image"
+                },
+                {
+                  "name": "descriptions",
+                  "type": "list",
+                  "elixirType": "Kove.Descriptions.Description"
+                },
+                {
+                  "name": "inserted_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "updated_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "id",
+                  "type": "id"
+                }
+              ],
+              "associations": {},
+              "associationsDetailed": [
+                {
+                  "fieldName": "engine",
+                  "targetModule": "Kove.Engines.Engine",
+                  "type": "belongs_to"
+                },
+                {
+                  "fieldName": "chassis_spec",
+                  "targetModule": "Kove.ChassisSpecs.ChassisSpec",
+                  "type": "has_one"
+                },
+                {
+                  "fieldName": "dimension",
+                  "targetModule": "Kove.Dimensions.Dimension",
+                  "type": "has_one"
+                },
+                {
+                  "fieldName": "bike_features",
+                  "targetModule": "Kove.BikeFeatures.BikeFeature",
+                  "type": "has_many"
+                },
+                {
+                  "fieldName": "images",
+                  "targetModule": "Kove.Images.Image",
+                  "type": "has_many"
+                },
+                {
+                  "fieldName": "descriptions",
+                  "targetModule": "Kove.Descriptions.Description",
+                  "type": "has_many"
+                }
+              ],
+              "aliases": {},
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove/bikes/bike.ex",
+              "line": 5
+            }
+          ]
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove/chassis_specs/chassis_spec.ex",
+          [
+            {
+              "moduleName": "Kove.ChassisSpecs.ChassisSpec",
+              "tableName": "chassis_specs",
+              "fields": [
+                {
+                  "name": "frame_type",
+                  "type": "string"
+                },
+                {
+                  "name": "front_suspension",
+                  "type": "string"
+                },
+                {
+                  "name": "front_travel",
+                  "type": "string"
+                },
+                {
+                  "name": "rear_suspension",
+                  "type": "string"
+                },
+                {
+                  "name": "rear_travel",
+                  "type": "string"
+                },
+                {
+                  "name": "front_brake",
+                  "type": "string"
+                },
+                {
+                  "name": "rear_brake",
+                  "type": "string"
+                },
+                {
+                  "name": "abs_system",
+                  "type": "string"
+                },
+                {
+                  "name": "wheels",
+                  "type": "string"
+                },
+                {
+                  "name": "tires",
+                  "type": "string"
+                },
+                {
+                  "name": "steering_angle",
+                  "type": "string"
+                },
+                {
+                  "name": "rake_angle",
+                  "type": "string"
+                },
+                {
+                  "name": "triple_clamp",
+                  "type": "string"
+                },
+                {
+                  "name": "bike",
+                  "type": "assoc",
+                  "elixirType": "Kove.Bikes.Bike"
+                },
+                {
+                  "name": "inserted_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "updated_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "id",
+                  "type": "id"
+                }
+              ],
+              "associations": {},
+              "associationsDetailed": [
+                {
+                  "fieldName": "bike",
+                  "targetModule": "Kove.Bikes.Bike",
+                  "type": "belongs_to"
+                }
+              ],
+              "aliases": {},
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove/chassis_specs/chassis_spec.ex",
+              "line": 5
+            }
+          ]
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove/descriptions/description.ex",
+          [
+            {
+              "moduleName": "Kove.Descriptions.Description",
+              "tableName": "descriptions",
+              "fields": [
+                {
+                  "name": "body",
+                  "type": "string"
+                },
+                {
+                  "name": "position",
+                  "type": "integer"
+                },
+                {
+                  "name": "bike",
+                  "type": "assoc",
+                  "elixirType": "Kove.Bikes.Bike"
+                },
+                {
+                  "name": "inserted_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "updated_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "id",
+                  "type": "id"
+                }
+              ],
+              "associations": {},
+              "associationsDetailed": [
+                {
+                  "fieldName": "bike",
+                  "targetModule": "Kove.Bikes.Bike",
+                  "type": "belongs_to"
+                }
+              ],
+              "aliases": {},
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove/descriptions/description.ex",
+              "line": 5
+            }
+          ]
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove/dimensions/dimension.ex",
+          [
+            {
+              "moduleName": "Kove.Dimensions.Dimension",
+              "tableName": "dimensions",
+              "fields": [
+                {
+                  "name": "weight",
+                  "type": "string"
+                },
+                {
+                  "name": "fuel_capacity",
+                  "type": "string"
+                },
+                {
+                  "name": "estimated_range",
+                  "type": "string"
+                },
+                {
+                  "name": "overall_size",
+                  "type": "string"
+                },
+                {
+                  "name": "wheelbase",
+                  "type": "string"
+                },
+                {
+                  "name": "seat_height",
+                  "type": "string"
+                },
+                {
+                  "name": "ground_clearance",
+                  "type": "string"
+                },
+                {
+                  "name": "bike",
+                  "type": "assoc",
+                  "elixirType": "Kove.Bikes.Bike"
+                },
+                {
+                  "name": "inserted_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "updated_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "id",
+                  "type": "id"
+                }
+              ],
+              "associations": {},
+              "associationsDetailed": [
+                {
+                  "fieldName": "bike",
+                  "targetModule": "Kove.Bikes.Bike",
+                  "type": "belongs_to"
+                }
+              ],
+              "aliases": {},
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove/dimensions/dimension.ex",
+              "line": 5
+            }
+          ]
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove/engines/engine.ex",
+          [
+            {
+              "moduleName": "Kove.Engines.Engine",
+              "tableName": "engines",
+              "fields": [
+                {
+                  "name": "platform_name",
+                  "type": "string"
+                },
+                {
+                  "name": "engine_type",
+                  "type": "string"
+                },
+                {
+                  "name": "displacement",
+                  "type": "string"
+                },
+                {
+                  "name": "bore_x_stroke",
+                  "type": "string"
+                },
+                {
+                  "name": "cooling",
+                  "type": "string"
+                },
+                {
+                  "name": "compression_ratio",
+                  "type": "string"
+                },
+                {
+                  "name": "fuel_system",
+                  "type": "string"
+                },
+                {
+                  "name": "transmission",
+                  "type": "string"
+                },
+                {
+                  "name": "clutch",
+                  "type": "string"
+                },
+                {
+                  "name": "starter",
+                  "type": "string"
+                },
+                {
+                  "name": "max_power",
+                  "type": "string"
+                },
+                {
+                  "name": "max_torque",
+                  "type": "string"
+                },
+                {
+                  "name": "bikes",
+                  "type": "list",
+                  "elixirType": "Kove.Bikes.Bike"
+                },
+                {
+                  "name": "inserted_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "updated_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "id",
+                  "type": "id"
+                }
+              ],
+              "associations": {},
+              "associationsDetailed": [
+                {
+                  "fieldName": "bikes",
+                  "targetModule": "Kove.Bikes.Bike",
+                  "type": "has_many"
+                }
+              ],
+              "aliases": {},
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove/engines/engine.ex",
+              "line": 5
+            }
+          ]
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove/images/image.ex",
+          [
+            {
+              "moduleName": "Kove.Images.Image",
+              "tableName": "images",
+              "fields": [
+                {
+                  "name": "alt",
+                  "type": "string"
+                },
+                {
+                  "name": "url",
+                  "type": "string"
+                },
+                {
+                  "name": "position",
+                  "type": "integer"
+                },
+                {
+                  "name": "is_hero",
+                  "type": "boolean"
+                },
+                {
+                  "name": "bike",
+                  "type": "assoc",
+                  "elixirType": "Kove.Bikes.Bike"
+                },
+                {
+                  "name": "inserted_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "updated_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "id",
+                  "type": "id"
+                }
+              ],
+              "associations": {},
+              "associationsDetailed": [
+                {
+                  "fieldName": "bike",
+                  "targetModule": "Kove.Bikes.Bike",
+                  "type": "belongs_to"
+                }
+              ],
+              "aliases": {},
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove/images/image.ex",
+              "line": 5
+            }
+          ]
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove/orders/order.ex",
+          [
+            {
+              "moduleName": "Kove.Orders.Order",
+              "tableName": "orders",
+              "fields": [
+                {
+                  "name": "customer_name",
+                  "type": "string"
+                },
+                {
+                  "name": "customer_email",
+                  "type": "string"
+                },
+                {
+                  "name": "customer_phone",
+                  "type": "string"
+                },
+                {
+                  "name": "notes",
+                  "type": "string"
+                },
+                {
+                  "name": "bike",
+                  "type": "assoc",
+                  "elixirType": "Kove.Bikes.Bike"
+                },
+                {
+                  "name": "inserted_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "updated_at",
+                  "type": "naive_datetime"
+                },
+                {
+                  "name": "id",
+                  "type": "id"
+                }
+              ],
+              "associations": {},
+              "associationsDetailed": [
+                {
+                  "fieldName": "bike",
+                  "targetModule": "Kove.Bikes.Bike",
+                  "type": "belongs_to"
+                }
+              ],
+              "aliases": {},
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove/orders/order.ex",
+              "line": 5
+            }
+          ]
+        ]
+      ],
+      "fileHashes": {
+        "/home/ph8l/share/kove_usa/lib/kove/bike_features/bike_feature.ex": "7f8488fc7d5217cb8bd6bfff3916ba06dc8935c2",
+        "/home/ph8l/share/kove_usa/lib/kove/bikes/bike.ex": "ef892eb419adcd771f26bd709606a6763adb3d69",
+        "/home/ph8l/share/kove_usa/lib/kove/chassis_specs/chassis_spec.ex": "33f78839bf2e5c40b4bb86a75d64bc279c928112",
+        "/home/ph8l/share/kove_usa/lib/kove/descriptions/description.ex": "82b08b8a6255ee282148f432d598c4a72be2c551",
+        "/home/ph8l/share/kove_usa/lib/kove/dimensions/dimension.ex": "5b7d1a9cb4f5cf80461a0dafb5c177c6d9e068f5",
+        "/home/ph8l/share/kove_usa/lib/kove/engines/engine.ex": "b10856936d68e5ea2ac57692034ddc1c478ab5ed",
+        "/home/ph8l/share/kove_usa/lib/kove/images/image.ex": "9ae46c7bb51212b9ea00f76f479cbad53f572bc1",
+        "/home/ph8l/share/kove_usa/lib/kove/orders/order.ex": "a322e56fc8b673abda01136bb9cb544a7f9de3f4"
+      },
       "workspaceRoot": "/home/ph8l/share/kove_usa"
     },
     "events": {
       "events": [
         [
-          "/home/ph8l/share/kove_usa/kove/mix.exs",
+          "/home/ph8l/share/kove_usa/lib/kove_web/live/storefront_live.ex",
           []
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex",
+          [
+            {
+              "name": "kovy_error",
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex",
+              "moduleName": "KoveWeb.BikeDetailsLive",
+              "line": 467,
+              "params": "{kovy_error, reason}",
+              "kind": "handle_info",
+              "nameKind": "atom"
+            },
+            {
+              "name": "kovy_done",
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex",
+              "moduleName": "KoveWeb.BikeDetailsLive",
+              "line": 454,
+              "params": "{}",
+              "kind": "handle_info",
+              "nameKind": "atom"
+            },
+            {
+              "name": "kovy_chunk",
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex",
+              "moduleName": "KoveWeb.BikeDetailsLive",
+              "line": 444,
+              "params": "{kovy_chunk, text}",
+              "kind": "handle_info",
+              "nameKind": "atom"
+            },
+            {
+              "name": "send_message",
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex",
+              "moduleName": "KoveWeb.BikeDetailsLive",
+              "line": 420,
+              "params": "%{}",
+              "kind": "handle_event",
+              "nameKind": "string"
+            },
+            {
+              "name": "set_tab",
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex",
+              "moduleName": "KoveWeb.BikeDetailsLive",
+              "line": 415,
+              "params": "%{}",
+              "kind": "handle_event",
+              "nameKind": "string"
+            }
+          ]
         ]
       ],
       "fileHashes": {
-        "/home/ph8l/share/kove_usa/kove/mix.exs": "2844b6883d5743cb5d7e071878fe1dc3c3be5193"
+        "/home/ph8l/share/kove_usa/lib/kove_web/live/storefront_live.ex": "0bb83745434c1543438b6157f5ac5855174d66fa",
+        "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex": "ae8b7ad3c9baf306101bf5dda3a38a2c50323fd1"
       },
       "workspaceRoot": "/home/ph8l/share/kove_usa"
     },
     "routes": {
       "routes": [
         {
+          "path": "/bikes/:slug",
+          "verb": "LIVE",
+          "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/router.ex",
+          "line": 21,
+          "helperBase": "bikes",
+          "params": [
+            "slug"
+          ],
+          "isResource": false,
+          "liveModule": "BikeDetailsLive",
+          "scopePath": "/"
+        },
+        {
           "path": "/",
-          "verb": "GET",
-          "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/router.ex",
+          "verb": "LIVE",
+          "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/router.ex",
           "line": 20,
           "helperBase": "root",
           "params": [],
           "isResource": false,
-          "controller": "PageController",
-          "action": "home",
+          "liveModule": "StorefrontLive",
           "scopePath": "/"
         }
       ],
       "fileHashes": {
-        "/home/ph8l/share/kove_usa/kove/lib/kove_web/router.ex": "1c81a83a1fb5f03f9a14956c50204f7bb8124a43"
+        "/home/ph8l/share/kove_usa/lib/kove_web/router.ex": "d30d52a7edc87303306db5a4f28eaafe100490ed"
       },
       "workspaceRoot": "/home/ph8l/share/kove_usa"
     },
     "controllers": {
       "rendersByFile": [
         [
-          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_controller.ex",
+          "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_controller.ex",
           [
             {
               "controllerModule": "KoveWeb.PageController",
-              "controllerFile": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_controller.ex",
+              "controllerFile": "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_controller.ex",
               "action": "home",
               "templateName": "home",
               "assigns": [],
               "assignsWithTypes": [],
               "line": 5,
-              "templatePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex"
+              "templatePath": "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html/home.html.heex"
             }
           ]
         ]
       ],
       "templateSummaries": [
         [
-          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex",
+          "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html/home.html.heex",
           {
-            "templatePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex",
+            "templatePath": "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html/home.html.heex",
             "assignSources": {},
             "controllers": [
               {
                 "controllerModule": "KoveWeb.PageController",
-                "controllerFile": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_controller.ex",
+                "controllerFile": "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_controller.ex",
                 "action": "home",
                 "templateName": "home",
                 "assigns": [],
                 "assignsWithTypes": [],
                 "line": 5,
-                "templatePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex"
+                "templatePath": "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html/home.html.heex"
               }
             ]
           }
         ]
       ],
       "fileHashes": {
-        "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_controller.ex": "29cc3d297ee90afb59c300b497f496894c5f0eb1"
+        "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_controller.ex": "29cc3d297ee90afb59c300b497f496894c5f0eb1"
       },
       "workspaceRoot": "/home/ph8l/share/kove_usa"
     },
     "templates": {
       "templatesByModule": [
+        [
+          "KoveWeb.BikeDetailsLive",
+          [
+            {
+              "moduleName": "KoveWeb.BikeDetailsLive",
+              "name": "render",
+              "format": "html",
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex#render"
+            }
+          ]
+        ],
         [
           "KoveWeb.PageHTML",
           [
@@ -774,36 +1986,156 @@
               "moduleName": "KoveWeb.PageHTML",
               "name": "home",
               "format": "html",
-              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex"
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html/home.html.heex"
+            }
+          ]
+        ],
+        [
+          "KoveWeb.StorefrontLive",
+          [
+            {
+              "moduleName": "KoveWeb.StorefrontLive",
+              "name": "render",
+              "format": "html",
+              "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/storefront_live.ex#render"
             }
           ]
         ]
       ],
       "templatesByPath": [
         [
-          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex",
+          "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex#render",
+          {
+            "moduleName": "KoveWeb.BikeDetailsLive",
+            "name": "render",
+            "format": "html",
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex#render"
+          }
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html/home.html.heex",
           {
             "moduleName": "KoveWeb.PageHTML",
             "name": "home",
             "format": "html",
-            "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex"
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html/home.html.heex"
+          }
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove_web/live/storefront_live.ex#render",
+          {
+            "moduleName": "KoveWeb.StorefrontLive",
+            "name": "render",
+            "format": "html",
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/storefront_live.ex#render"
           }
         ]
       ],
       "moduleByFile": [
         [
-          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html.ex",
+          "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex",
+          "KoveWeb.BikeDetailsLive"
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html.ex",
           "KoveWeb.PageHTML"
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove_web/live/storefront_live.ex",
+          "KoveWeb.StorefrontLive"
         ]
       ],
       "fileHashes": {
-        "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html.ex": "09c40480d0bf7d820d37ae5cb5cfc4385cd51ef4"
+        "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex": "ae8b7ad3c9baf306101bf5dda3a38a2c50323fd1",
+        "/home/ph8l/share/kove_usa/lib/kove_web/controllers/page_html.ex": "09c40480d0bf7d820d37ae5cb5cfc4385cd51ef4",
+        "/home/ph8l/share/kove_usa/lib/kove_web/live/storefront_live.ex": "0bb83745434c1543438b6157f5ac5855174d66fa"
       },
       "workspaceRoot": "/home/ph8l/share/kove_usa"
     },
     "liveview": {
-      "liveViews": [],
-      "fileHashes": {},
+      "liveViews": [
+        [
+          "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex",
+          {
+            "module": "KoveWeb.BikeDetailsLive",
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex",
+            "functions": [
+              {
+                "line": 467,
+                "name": "kovy_error",
+                "type": "handle_info",
+                "module_name": "KoveWeb.BikeDetailsLive",
+                "event_name": "kovy_error"
+              },
+              {
+                "line": 454,
+                "name": "kovy_done",
+                "type": "handle_info",
+                "module_name": "KoveWeb.BikeDetailsLive",
+                "event_name": "kovy_done"
+              },
+              {
+                "line": 444,
+                "name": "kovy_chunk",
+                "type": "handle_info",
+                "module_name": "KoveWeb.BikeDetailsLive",
+                "event_name": "kovy_chunk"
+              },
+              {
+                "line": 420,
+                "name": "send_message",
+                "type": "handle_event",
+                "module_name": "KoveWeb.BikeDetailsLive",
+                "event_name": "send_message"
+              },
+              {
+                "line": 415,
+                "name": "set_tab",
+                "type": "handle_event",
+                "module_name": "KoveWeb.BikeDetailsLive",
+                "event_name": "set_tab"
+              },
+              {
+                "line": 25,
+                "name": "render",
+                "type": "render",
+                "module_name": "KoveWeb.BikeDetailsLive"
+              },
+              {
+                "line": 8,
+                "name": "mount",
+                "type": "mount",
+                "module_name": "KoveWeb.BikeDetailsLive"
+              }
+            ]
+          }
+        ],
+        [
+          "/home/ph8l/share/kove_usa/lib/kove_web/live/storefront_live.ex",
+          {
+            "module": "KoveWeb.StorefrontLive",
+            "filePath": "/home/ph8l/share/kove_usa/lib/kove_web/live/storefront_live.ex",
+            "functions": [
+              {
+                "line": 17,
+                "name": "render",
+                "type": "render",
+                "module_name": "KoveWeb.StorefrontLive"
+              },
+              {
+                "line": 7,
+                "name": "mount",
+                "type": "mount",
+                "module_name": "KoveWeb.StorefrontLive"
+              }
+            ]
+          }
+        ]
+      ],
+      "fileHashes": {
+        "/home/ph8l/share/kove_usa/lib/kove_web/live/bike_details_live.ex": "ae8b7ad3c9baf306101bf5dda3a38a2c50323fd1",
+        "/home/ph8l/share/kove_usa/lib/kove_web/live/storefront_live.ex": "0bb83745434c1543438b6157f5ac5855174d66fa"
+      },
       "workspaceRoot": "/home/ph8l/share/kove_usa"
     }
   },
