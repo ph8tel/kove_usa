@@ -233,7 +233,12 @@ defmodule KoveWeb.ChatLive do
 
   @impl true
   def handle_event("send_message", %{"message" => message}, socket) do
-    send(self(), {:chat_send, String.trim(message)})
+    trimmed = String.trim(message)
+
+    if trimmed != "" do
+      send(self(), {:chat_send, trimmed})
+    end
+
     {:noreply, socket}
   end
 

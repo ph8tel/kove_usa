@@ -442,7 +442,7 @@ defmodule KoveWeb.BikeDetailsLive do
 
   @impl true
   def handle_info({:chat_send, message}, socket) do
-    if message == "" || socket.assigns.chat_loading do
+    if socket.assigns.chat_loading do
       {:noreply, socket}
     else
       user_msg = %{role: :user, content: message}

@@ -23,7 +23,7 @@ defmodule Kove.Bikes do
   features, images, descriptions). Used by the catalog chat prompt builder.
   """
   def list_bikes_full do
-    descriptions_query = from(d in Kove.Descriptions.Description, select: %{d | embedding: nil})
+    descriptions_query = descriptions_without_embedding()
 
     Bike
     |> order_by([b], asc: b.category, asc: b.name)
@@ -43,7 +43,7 @@ defmodule Kove.Bikes do
   Returns `nil` if not found.
   """
   def get_bike_by_slug(slug) do
-    descriptions_query = from(d in Kove.Descriptions.Description, select: %{d | embedding: nil})
+    descriptions_query = descriptions_without_embedding()
 
     Bike
     |> where(slug: ^slug)
@@ -63,7 +63,7 @@ defmodule Kove.Bikes do
   Raises `Ecto.NoResultsError` if not found.
   """
   def get_bike!(id) do
-    descriptions_query = from(d in Kove.Descriptions.Description, select: %{d | embedding: nil})
+    descriptions_query = descriptions_without_embedding()
 
     Bike
     |> preload([
@@ -75,6 +75,14 @@ defmodule Kove.Bikes do
       descriptions: ^descriptions_query
     ])
     |> Repo.get!(id)
+  end
+
+  # Selects all description columns except the large pgvector embedding,
+  # so Postgres never transfers the vector data over the wire.
+  defp descriptions_without_embedding do
+    from(d in Kove.Descriptions.Description,
+      select: struct(d, [:id, :bike_id, :kind, :body, :position, :inserted_at, :updated_at])
+    )
   end
 
   @doc """
