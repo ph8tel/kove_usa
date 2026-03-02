@@ -38,6 +38,19 @@ defmodule Kove.KovyAssistant do
     GenServer.cast(__MODULE__, {:send_message, bike, chat_history, caller_pid})
   end
 
+  @doc """
+  Sends a catalog‑wide chat message with context for all `bikes`.
+
+  Uses pseudo‑RAG: the latest user message is scanned for bike name / category
+  keywords, and only matching bikes get their full specs serialised into the prompt.
+  A compact catalog summary is always included.
+
+  Streaming response messages are identical to `send_message/3`.
+  """
+  def send_catalog_message(bikes, chat_history, caller_pid \\ self()) do
+    GenServer.cast(__MODULE__, {:send_catalog_message, bikes, chat_history, caller_pid})
+  end
+
   # ── Server callbacks ─────────────────────────────────────────────────
 
   @impl true
@@ -67,6 +80,43 @@ defmodule Kove.KovyAssistant do
       Logger.info(
         "KovyAssistant task: sending #{length(api_messages)} messages to Groq (key=#{if groq.api_key_available?(), do: "SET", else: "MISSING"})"
       )
+
+      groq.stream_chat(api_messages, caller_pid)
+    end)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:send_catalog_message, bikes, chat_history, caller_pid}, state) do
+    Logger.info(
+      "KovyAssistant: starting catalog chat, #{length(bikes)} bikes, history=#{length(chat_history)} msgs"
+    )
+
+    Task.Supervisor.start_child(Kove.TaskSupervisor, fn ->
+      groq = groq_module()
+
+      # Extract latest user message for keyword matching (pseudo-RAG)
+      last_user_message =
+        chat_history
+        |> Enum.reverse()
+        |> Enum.find(fn msg -> msg.role == :user end)
+        |> case do
+          nil -> ""
+          msg -> msg.content
+        end
+
+      system_prompt = Prompt.build_catalog_system_prompt(bikes, last_user_message)
+
+      api_messages =
+        [
+          %{"role" => "system", "content" => system_prompt}
+          | Enum.map(chat_history, fn msg ->
+              %{"role" => to_string(msg.role), "content" => msg.content}
+            end)
+        ]
+
+      Logger.info("KovyAssistant task: sending #{length(api_messages)} catalog messages to Groq")
 
       groq.stream_chat(api_messages, caller_pid)
     end)

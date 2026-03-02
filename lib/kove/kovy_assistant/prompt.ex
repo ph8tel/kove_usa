@@ -41,7 +41,129 @@ defmodule Kove.KovyAssistant.Prompt do
     |> String.trim()
   end
 
+  @doc """
+  Returns the system‑prompt string for a catalog‑wide conversation.
+
+  Includes a compact one‑line summary for every bike, plus full detailed context
+  only for bikes that match keywords in `user_message` (pseudo‑RAG).
+  If no bikes match (e.g. general questions), only the catalog summary is included.
+  """
+  def build_catalog_system_prompt(bikes, user_message) do
+    matched = relevant_bikes(bikes, user_message)
+
+    detailed_section =
+      case matched do
+        [] ->
+          ""
+
+        _ ->
+          details =
+            matched
+            |> Enum.map(&bike_context/1)
+            |> Enum.join("\n\n---\n\n")
+
+          "\nDETAILED SPECS FOR RELEVANT BIKES:\n#{details}"
+      end
+
+    """
+    You are Kovy, the Kove Moto USA catalog assistant. You're knowledgeable, \
+    technical, and honest — like a well‑informed friend at the dealership who \
+    also happens to be a mechanic and rally rider.
+
+    PERSONALITY & TONE:
+    - Technical and straightforward — never salesy or hype‑driven
+    - Reference real‑world riding scenarios and practical considerations
+    - You know the ADV / rally / MX market well, especially KTM, Husqvarna, GasGas, and Honda
+    - When comparing, be factual: acknowledge where competitors are strong and where Kove stands out
+    - Address Chinese‑manufacturing quality concerns directly and honestly
+    - Enthusiastic about Kove's Dakar heritage and continuous engineering improvements
+    - Kove is pronounced like "cove" (as in a sheltered bay)
+
+    You have access to the FULL Kove Moto USA catalog. Here is every model:
+
+    CATALOG SUMMARY:
+    #{catalog_summary(bikes)}
+    #{detailed_section}
+
+    RULES:
+    - Ground your answers in the specs above — do not invent data
+    - If you lack info on something, say so honestly
+    - Keep responses concise: 2‑4 short paragraphs max
+    - Use both metric and imperial when citing measurements
+    - For comparisons: use specific numbers (displacement, weight, travel, price)
+    - Never claim Kove is "better" without backing it up with specs
+    - When the user wants help choosing a bike, ask about their riding experience, \
+    preferred terrain, intended use (commute, touring, off‑road, track), and budget \
+    before recommending — guide them through it conversationally like a rider‑type survey
+    """
+    |> String.trim()
+  end
+
+  @doc """
+  Returns the subset of `bikes` whose names, slugs, or categories match
+  keywords found in `user_message`. Case‑insensitive.
+
+  This is a lightweight pseudo‑RAG: only bikes the user appears to be asking
+  about get their full specs serialised into the prompt.
+  """
+  def relevant_bikes(bikes, user_message) do
+    query = String.downcase(user_message)
+
+    Enum.filter(bikes, fn bike ->
+      tokens = bike_search_tokens(bike)
+      Enum.any?(tokens, fn token -> String.contains?(query, token) end)
+    end)
+  end
+
   # ── Private helpers ────────────────────────────────────────────────────
+
+  defp catalog_summary(bikes) do
+    bikes
+    |> Enum.map(fn bike ->
+      displacement =
+        case bike.engine do
+          nil -> ""
+          %Ecto.Association.NotLoaded{} -> ""
+          engine -> engine.displacement || ""
+        end
+
+      "- #{bike.name} | #{Bikes.category_label(bike.category)} | #{displacement} | #{Bikes.format_msrp(bike.msrp_cents)}"
+    end)
+    |> Enum.join("\n")
+  end
+
+  defp bike_search_tokens(bike) do
+    # Build a list of lowercase tokens from bike attributes that users might mention
+    name_tokens =
+      bike.name
+      |> String.downcase()
+      |> String.split(~r/[\s\-]+/, trim: true)
+      |> Enum.reject(&(String.length(&1) < 3))
+
+    slug_tokens =
+      bike.slug
+      |> String.downcase()
+      |> String.split(~r/[\s\-]+/, trim: true)
+      |> Enum.reject(&(String.length(&1) < 3))
+
+    category_tokens =
+      case bike.category do
+        :adv -> ["adventure", "adv"]
+        :rally -> ["rally"]
+        :mx -> ["motocross", "mx"]
+        _ -> []
+      end
+
+    variant_tokens =
+      if bike.variant do
+        [String.downcase(bike.variant)]
+      else
+        []
+      end
+
+    (name_tokens ++ slug_tokens ++ category_tokens ++ variant_tokens)
+    |> Enum.uniq()
+  end
 
   defp bike_context(bike) do
     [

@@ -9,6 +9,7 @@ defmodule Kove.Bikes do
 
   @doc """
   Returns all bikes ordered by category then name, with engine and hero image preloaded.
+  Used for the storefront grid cards.
   """
   def list_bikes do
     Bike
@@ -18,11 +19,31 @@ defmodule Kove.Bikes do
   end
 
   @doc """
+  Returns all bikes with every association preloaded (engine, chassis, dimensions,
+  features, images, descriptions). Used by the catalog chat prompt builder.
+  """
+  def list_bikes_full do
+    descriptions_query = descriptions_without_embedding()
+
+    Bike
+    |> order_by([b], asc: b.category, asc: b.name)
+    |> preload([
+      :engine,
+      :chassis_spec,
+      :dimension,
+      :bike_features,
+      :images,
+      descriptions: ^descriptions_query
+    ])
+    |> Repo.all()
+  end
+
+  @doc """
   Fetches a single bike by slug with all associations preloaded.
   Returns `nil` if not found.
   """
   def get_bike_by_slug(slug) do
-    descriptions_query = from(d in Kove.Descriptions.Description, select: %{d | embedding: nil})
+    descriptions_query = descriptions_without_embedding()
 
     Bike
     |> where(slug: ^slug)
@@ -42,7 +63,7 @@ defmodule Kove.Bikes do
   Raises `Ecto.NoResultsError` if not found.
   """
   def get_bike!(id) do
-    descriptions_query = from(d in Kove.Descriptions.Description, select: %{d | embedding: nil})
+    descriptions_query = descriptions_without_embedding()
 
     Bike
     |> preload([
@@ -54,6 +75,14 @@ defmodule Kove.Bikes do
       descriptions: ^descriptions_query
     ])
     |> Repo.get!(id)
+  end
+
+  # Selects all description columns except the large pgvector embedding,
+  # so Postgres never transfers the vector data over the wire.
+  defp descriptions_without_embedding do
+    from(d in Kove.Descriptions.Description,
+      select: struct(d, [:id, :bike_id, :kind, :body, :position, :inserted_at, :updated_at])
+    )
   end
 
   @doc """
