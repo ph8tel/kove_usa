@@ -55,4 +55,15 @@ defmodule Kove.DataCase do
       end)
     end)
   end
+
+  @doc """
+  Asserts that a changeset has an error on the specified field.
+
+      assert {:error, changeset} = Bikes.create_bike(%{})
+      assert_field_error(changeset, :name)
+  """
+  def assert_field_error(changeset, field) do
+    assert field in Enum.map(changeset.errors, fn {f, _} -> f end),
+           "Expected field #{inspect(field)} to have an error"
+  end
 end

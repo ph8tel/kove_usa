@@ -1,6 +1,9 @@
 defmodule KoveWeb.StorefrontLive do
   use KoveWeb, :live_view
 
+  import KoveWeb.Live.ChatHandlers
+  import KoveWeb.Live.BikeHelpers
+
   alias Kove.Bikes
   alias Kove.KovyAssistant
   alias KoveWeb.ChatLive
@@ -174,60 +177,14 @@ defmodule KoveWeb.StorefrontLive do
   end
 
   @impl true
-  def handle_info(:chat_toggle, socket) do
-    {:noreply, assign(socket, :chat_open, !socket.assigns.chat_open)}
-  end
+  def handle_info(:chat_toggle, socket), do: handle_chat_toggle(socket)
 
   @impl true
-  def handle_info({:kovy_chunk, text}, socket) do
-    messages =
-      List.update_at(socket.assigns.chat_messages, -1, fn msg ->
-        %{msg | content: msg.content <> text}
-      end)
-
-    {:noreply, assign(socket, :chat_messages, messages)}
-  end
+  def handle_info({:kovy_chunk, text}, socket), do: handle_kovy_chunk(socket, text)
 
   @impl true
-  def handle_info({:kovy_done}, socket) do
-    messages =
-      List.update_at(socket.assigns.chat_messages, -1, fn msg ->
-        Map.delete(msg, :streaming)
-      end)
-
-    {:noreply,
-     socket
-     |> assign(:chat_messages, messages)
-     |> assign(:chat_loading, false)}
-  end
+  def handle_info({:kovy_done}, socket), do: handle_kovy_done(socket)
 
   @impl true
-  def handle_info({:kovy_error, reason}, socket) do
-    messages =
-      List.update_at(socket.assigns.chat_messages, -1, fn msg ->
-        msg
-        |> Map.put(:content, reason)
-        |> Map.put(:streaming, false)
-        |> Map.put(:error, true)
-      end)
-
-    {:noreply,
-     socket
-     |> assign(:chat_messages, messages)
-     |> assign(:chat_loading, false)}
-  end
-
-  # ── Helpers ──────────────────────────────────────────────────────────
-
-  defp engine_label(%{engine: %{displacement: disp, engine_type: type}})
-       when is_binary(disp) and is_binary(type) do
-    "#{disp} #{type}"
-  end
-
-  defp engine_label(_), do: ""
-
-  defp badge_color(:adv), do: "badge-primary"
-  defp badge_color(:rally), do: "badge-secondary"
-  defp badge_color(:mx), do: "badge-accent"
-  defp badge_color(_), do: "badge-neutral"
+  def handle_info({:kovy_error, reason}, socket), do: handle_kovy_error(socket, reason)
 end

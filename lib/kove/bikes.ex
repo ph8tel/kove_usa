@@ -124,6 +124,26 @@ defmodule Kove.Bikes do
   end
 
   @doc """
+  Creates a URL-friendly slug from a bike name or string.
+
+  ## Examples
+
+      iex> Kove.Bikes.slugify("2026 Kove 800X Pro")
+      "2026-kove-800x-pro"
+
+      iex> Kove.Bikes.slugify("MX450  Rally!!")
+      "mx450-rally"
+  """
+  def slugify(name) when is_binary(name) do
+    name
+    |> String.downcase()
+    |> String.replace(~r/[^\w\s-]/, "")
+    |> String.replace(~r/\s+/, "-")
+    |> String.replace(~r/-+/, "-")
+    |> String.trim("-")
+  end
+
+  @doc """
   Returns a human-readable category label.
   """
   def category_label(:adv), do: "Adventure"
