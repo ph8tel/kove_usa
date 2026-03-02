@@ -137,7 +137,7 @@ defmodule KoveWeb.BikeDetailsLive do
             ]}
           >
             <.icon name="hero-sparkles" class="size-5" />
-            <span class="hidden sm:inline ml-2">Marketing</span>
+            <span class="hidden sm:inline ml-2">Description</span>
           </button>
           <button
             phx-click="set_tab"
