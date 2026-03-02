@@ -1,4 +1,4 @@
-defmodule KoveWeb.BikeDetailsLiveChatTest do
+defmodule KoveWeb.StorefrontLiveChatTest do
   use KoveWeb.ConnCase
 
   import Phoenix.LiveViewTest
@@ -42,51 +42,54 @@ defmodule KoveWeb.BikeDetailsLiveChatTest do
     {:ok, bike: bike}
   end
 
-  describe "bike details page mount" do
-    test "renders bike info and chat panel", %{conn: conn, bike: bike} do
-      {:ok, _view, html} = live(conn, ~p"/bikes/#{bike.slug}")
+  describe "storefront page mount with chat" do
+    test "renders Kovy chat panel", %{conn: conn} do
+      {:ok, _view, html} = live(conn, ~p"/")
 
-      assert html =~ bike.name
       assert html =~ "Kovy"
       assert html =~ "Your bike assistant"
-      assert html =~ "Ask me anything"
+      assert html =~ "our lineup"
     end
 
-    test "shows quick-ask buttons on initial load", %{conn: conn, bike: bike} do
-      {:ok, _view, html} = live(conn, ~p"/bikes/#{bike.slug}")
+    test "shows catalog quick-ask buttons on initial load", %{conn: conn} do
+      {:ok, _view, html} = live(conn, ~p"/")
 
-      assert html =~ "vs KTM?"
-      assert html =~ "Maintenance?"
-      assert html =~ "Upgrades?"
+      assert html =~ "Best for beginners?"
+      assert html =~ "Compare models"
+      assert html =~ "Off-road pick?"
     end
 
-    test "redirects to / for unknown slug", %{conn: conn} do
-      assert {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/bikes/nonexistent-slug")
+    test "still renders the bike grid", %{conn: conn, bike: bike} do
+      {:ok, _view, html} = live(conn, ~p"/")
+
+      assert html =~ "KOVE MOTO"
+      assert html =~ bike.name
     end
   end
 
   describe "send_message event" do
-    test "adds user message and streaming assistant bubble", %{conn: conn, bike: bike} do
+    test "adds user message and streaming assistant bubble", %{conn: conn} do
       Kove.KovyAssistant.GroqMock
       |> stub(:api_key_available?, fn -> true end)
       |> stub(:stream_chat, fn _messages, _pid -> :ok end)
 
-      {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
+      {:ok, view, _html} = live(conn, ~p"/")
 
+      # Submit via the component form
       view
-      |> form("#kovy-chat-form", %{message: "What engine does this have?"})
+      |> form("#kovy-chat-form", %{message: "Which bike for a beginner?"})
       |> render_submit()
 
       # Let the parent process the relayed {:chat_send, msg}
       html = render(view)
 
-      assert html =~ "What engine does this have?"
+      assert html =~ "Which bike for a beginner?"
       # The loading spinner should appear
       assert html =~ "loading"
     end
 
-    test "ignores empty messages", %{conn: conn, bike: bike} do
-      {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
+    test "ignores empty messages", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/")
 
       view
       |> form("#kovy-chat-form", %{message: "  "})
@@ -95,57 +98,57 @@ defmodule KoveWeb.BikeDetailsLiveChatTest do
       html = render(view)
 
       # Should still show the empty state
-      assert html =~ "Ask me anything"
+      assert html =~ "our lineup"
     end
 
-    test "quick-ask button sends a message", %{conn: conn, bike: bike} do
+    test "quick-ask button sends a message", %{conn: conn} do
       Kove.KovyAssistant.GroqMock
       |> stub(:api_key_available?, fn -> true end)
       |> stub(:stream_chat, fn _messages, _pid -> :ok end)
 
-      {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
+      {:ok, view, _html} = live(conn, ~p"/")
 
       view
-      |> element("#kovy-chat button", "vs KTM?")
+      |> element("#kovy-chat button", "Best for beginners?")
       |> render_click()
 
       html = render(view)
 
-      assert html =~ "How does this compare to a KTM?"
+      assert html =~ "Which Kove bike is best for a beginner?"
     end
   end
 
   describe "streaming callbacks" do
-    test "kovy_chunk appends text to the assistant message", %{conn: conn, bike: bike} do
+    test "kovy_chunk appends text to the assistant message", %{conn: conn} do
       Kove.KovyAssistant.GroqMock
       |> stub(:api_key_available?, fn -> true end)
       |> stub(:stream_chat, fn _messages, _pid -> :ok end)
 
-      {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
+      {:ok, view, _html} = live(conn, ~p"/")
 
       view
-      |> form("#kovy-chat-form", %{message: "Tell me about the engine"})
+      |> form("#kovy-chat-form", %{message: "Compare the 800X models"})
       |> render_submit()
 
-      # Let the parent process the relayed message
+      # Let parent process the chat_send message
       render(view)
 
       # Simulate streaming chunks arriving
-      send(view.pid, {:kovy_chunk, "The 800X features "})
+      send(view.pid, {:kovy_chunk, "The 800X comes in "})
       html = render(view)
-      assert html =~ "The 800X features"
+      assert html =~ "The 800X comes in"
 
-      send(view.pid, {:kovy_chunk, "a 799cc parallel twin."})
+      send(view.pid, {:kovy_chunk, "three variants."})
       html = render(view)
-      assert html =~ "a 799cc parallel twin."
+      assert html =~ "three variants."
     end
 
-    test "kovy_done clears loading state", %{conn: conn, bike: bike} do
+    test "kovy_done clears loading state", %{conn: conn} do
       Kove.KovyAssistant.GroqMock
       |> stub(:api_key_available?, fn -> true end)
       |> stub(:stream_chat, fn _messages, _pid -> :ok end)
 
-      {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
+      {:ok, view, _html} = live(conn, ~p"/")
 
       view
       |> form("#kovy-chat-form", %{message: "Hello"})
@@ -158,16 +161,15 @@ defmodule KoveWeb.BikeDetailsLiveChatTest do
       html = render(view)
 
       assert html =~ "Hi there!"
-      # Input should no longer be disabled — placeholder should be the default
-      assert html =~ "Ask about this bike..."
+      assert html =~ "Ask about any Kove bike..."
     end
 
-    test "kovy_error shows error styling and clears loading", %{conn: conn, bike: bike} do
+    test "kovy_error shows error styling and clears loading", %{conn: conn} do
       Kove.KovyAssistant.GroqMock
       |> stub(:api_key_available?, fn -> true end)
       |> stub(:stream_chat, fn _messages, _pid -> :ok end)
 
-      {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
+      {:ok, view, _html} = live(conn, ~p"/")
 
       view
       |> form("#kovy-chat-form", %{message: "Hello"})
@@ -180,61 +182,41 @@ defmodule KoveWeb.BikeDetailsLiveChatTest do
 
       assert html =~ "Something went wrong"
       assert html =~ "border-error"
-      # Loading should be cleared
-      assert html =~ "Ask about this bike..."
+      assert html =~ "Ask about any Kove bike..."
     end
 
-    test "full streaming conversation round-trip", %{conn: conn, bike: bike} do
+    test "full streaming conversation round-trip", %{conn: conn} do
       test_pid = self()
 
       Kove.KovyAssistant.GroqMock
       |> stub(:api_key_available?, fn -> true end)
       |> stub(:stream_chat, fn messages, pid ->
-        # Verify message structure
-        assert [%{"role" => "system"}, %{"role" => "user"}] = messages
-        # Notify test that we were called
+        # Verify the system message contains catalog content
+        [system | _rest] = messages
+        assert system["role"] == "system"
+        assert system["content"] =~ "catalog"
+
         send(test_pid, :groq_called)
-        # Simulate streaming back
         send(pid, {:kovy_chunk, "Great "})
         send(pid, {:kovy_chunk, "question! "})
-        send(pid, {:kovy_chunk, "The 800X is awesome."})
+        send(pid, {:kovy_chunk, "Here's the breakdown."})
         send(pid, {:kovy_done})
         :ok
       end)
 
-      {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
+      {:ok, view, _html} = live(conn, ~p"/")
 
       view
-      |> form("#kovy-chat-form", %{message: "Tell me about this bike"})
+      |> form("#kovy-chat-form", %{message: "Compare the 800X and 450"})
       |> render_submit()
 
-      render(view)
-
-      # Wait for the GenServer task to call our mock
       assert_receive :groq_called, 2_000
 
-      # Let the LiveView process all the messages
       html = render(view)
 
-      assert html =~ "Tell me about this bike"
-      assert html =~ "The 800X is awesome."
-      assert html =~ "Ask about this bike..."
-    end
-  end
-
-  describe "tab switching" do
-    test "set_tab event switches active tab", %{conn: conn, bike: bike} do
-      {:ok, view, html} = live(conn, ~p"/bikes/#{bike.slug}")
-
-      # Default tab is marketing
-      assert html =~ "Marketing"
-
-      html =
-        view
-        |> element("button[phx-click='set_tab'][phx-value-tab='engine']")
-        |> render_click()
-
-      assert html =~ "Engine"
+      assert html =~ "Compare the 800X and 450"
+      assert html =~ "the breakdown."
+      assert html =~ "Ask about any Kove bike..."
     end
   end
 end

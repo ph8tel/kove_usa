@@ -2,34 +2,64 @@ defmodule KoveWeb.StorefrontLive do
   use KoveWeb, :live_view
 
   alias Kove.Bikes
+  alias Kove.KovyAssistant
+  alias KoveWeb.ChatLive
 
   @impl true
   def mount(_params, _session, socket) do
     bikes = Bikes.list_bikes()
+    bikes_full = Bikes.list_bikes_full()
 
     {:ok,
      socket
      |> assign(:page_title, "Kove Moto USA")
-     |> assign(:bikes, bikes)}
+     |> assign(:bikes, bikes)
+     |> assign(:bikes_full, bikes_full)
+     |> assign(:chat_messages, [])
+     |> assign(:chat_loading, false)
+     |> assign(:chat_open, false)}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <%!-- Hero Section --%>
-    <section class="text-center mb-16">
-      <h1 class="text-5xl sm:text-6xl font-black tracking-tight">
-        KOVE MOTO <span class="text-primary">USA</span>
-      </h1>
-      <p class="mt-4 text-lg text-base-content/60 max-w-2xl mx-auto">
-        Adventure, Rally &amp; Motocross motorcycles engineered for riders who push boundaries.
-      </p>
-    </section>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-8">
+      <%!-- Left Column: Hero + Bike Grid --%>
+      <div class="lg:col-span-2">
+        <%!-- Hero Section --%>
+        <section class="text-center mb-16">
+          <h1 class="text-5xl sm:text-6xl font-black tracking-tight">
+            KOVE MOTO <span class="text-primary">USA</span>
+          </h1>
+          <p class="mt-4 text-lg text-base-content/60 max-w-2xl mx-auto">
+            Adventure, Rally &amp; Motocross motorcycles engineered for riders who push boundaries.
+          </p>
+        </section>
 
-    <%!-- Bike Grid — 2 columns × 3 rows --%>
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <.bike_card :for={bike <- @bikes} bike={bike} />
-    </section>
+        <%!-- Bike Grid — 2 columns --%>
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <.bike_card :for={bike <- @bikes} bike={bike} />
+        </section>
+      </div>
+
+      <%!-- Right Column: Chat via ChatLive component (desktop + mobile) --%>
+      <div class="lg:col-span-1">
+        <.live_component
+          module={ChatLive}
+          id="kovy-chat"
+          chat_messages={@chat_messages}
+          chat_loading={@chat_loading}
+          chat_open={@chat_open}
+          context_label="our lineup"
+          placeholder="Ask about any Kove bike..."
+          quick_asks={[
+            %{label: "Best for beginners?", message: "Which Kove bike is best for a beginner?"},
+            %{label: "Compare models", message: "Compare the 800X and 450 Rally"},
+            %{label: "Off-road pick?", message: "What's the best Kove for off-road riding?"}
+          ]}
+        />
+      </div>
+    </div>
     """
   end
 
@@ -119,6 +149,72 @@ defmodule KoveWeb.StorefrontLive do
       </div>
     </article>
     """
+  end
+
+  # ── Chat callbacks from ChatLive component ──
+
+  @impl true
+  def handle_info({:chat_send, message}, socket) do
+    if message == "" || socket.assigns.chat_loading do
+      {:noreply, socket}
+    else
+      user_msg = %{role: :user, content: message}
+      assistant_msg = %{role: :assistant, content: "", streaming: true}
+
+      history = socket.assigns.chat_messages ++ [user_msg]
+
+      KovyAssistant.send_catalog_message(socket.assigns.bikes_full, history)
+
+      {:noreply,
+       socket
+       |> assign(:chat_messages, history ++ [assistant_msg])
+       |> assign(:chat_loading, true)
+       |> assign(:chat_open, true)}
+    end
+  end
+
+  @impl true
+  def handle_info(:chat_toggle, socket) do
+    {:noreply, assign(socket, :chat_open, !socket.assigns.chat_open)}
+  end
+
+  @impl true
+  def handle_info({:kovy_chunk, text}, socket) do
+    messages =
+      List.update_at(socket.assigns.chat_messages, -1, fn msg ->
+        %{msg | content: msg.content <> text}
+      end)
+
+    {:noreply, assign(socket, :chat_messages, messages)}
+  end
+
+  @impl true
+  def handle_info({:kovy_done}, socket) do
+    messages =
+      List.update_at(socket.assigns.chat_messages, -1, fn msg ->
+        Map.delete(msg, :streaming)
+      end)
+
+    {:noreply,
+     socket
+     |> assign(:chat_messages, messages)
+     |> assign(:chat_loading, false)}
+  end
+
+  @impl true
+  def handle_info({:kovy_error, reason}, socket) do
+    messages =
+      List.update_at(socket.assigns.chat_messages, -1, fn msg ->
+        msg
+        |> Map.put(:content, reason)
+        |> Map.put(:streaming, false)
+        |> Map.put(:error, true)
+      end)
+
+    {:noreply,
+     socket
+     |> assign(:chat_messages, messages)
+     |> assign(:chat_loading, false)}
   end
 
   # ── Helpers ──────────────────────────────────────────────────────────

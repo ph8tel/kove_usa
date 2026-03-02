@@ -3,6 +3,7 @@ defmodule KoveWeb.BikeDetailsLive do
 
   alias Kove.Bikes
   alias Kove.KovyAssistant
+  alias KoveWeb.ChatLive
 
   @impl true
   def mount(%{"slug" => slug}, _session, socket) do
@@ -387,245 +388,25 @@ defmodule KoveWeb.BikeDetailsLive do
         </div>
       </div>
 
-      <%!-- Right Column: Chat — desktop only --%>
-      <div class="hidden lg:block lg:col-span-1">
-        <div class="bg-base-200 rounded-lg lg:h-screen lg:sticky lg:top-20 flex flex-col overflow-hidden">
-          <%!-- Chat Header --%>
-          <div class="bg-primary text-primary-content p-4 border-b border-primary/20">
-            <div class="flex items-center gap-2">
-              <div class="size-8 rounded-full bg-primary-content/20 flex items-center justify-center">
-                <.icon name="hero-sparkles" class="size-5" />
-              </div>
-              <div>
-                <h2 class="font-bold">Kovy</h2>
-                <p class="text-xs opacity-75">Your bike assistant</p>
-              </div>
-            </div>
-          </div>
-
-          <%!-- Chat Messages --%>
-          <div id="chat-messages" phx-hook="ScrollBottom" class="flex-1 overflow-y-auto p-4 space-y-4">
-            <div
-              :if={Enum.empty?(@chat_messages)}
-              class="h-full flex flex-col items-center justify-center text-base-content/50 text-center text-sm gap-4"
-            >
-              <div>
-                <p class="font-bold mb-2">Hey! I'm Kovy 👋</p>
-                <p>Ask me anything about the {@bike.name}.</p>
-              </div>
-              <div class="flex flex-wrap justify-center gap-2">
-                <button
-                  phx-click="send_message"
-                  phx-value-message="How does this compare to a KTM?"
-                  class="btn btn-xs btn-outline"
-                >
-                  vs KTM?
-                </button>
-                <button
-                  phx-click="send_message"
-                  phx-value-message="What should I expect for maintenance?"
-                  class="btn btn-xs btn-outline"
-                >
-                  Maintenance?
-                </button>
-                <button
-                  phx-click="send_message"
-                  phx-value-message="What upgrades do riders make?"
-                  class="btn btn-xs btn-outline"
-                >
-                  Upgrades?
-                </button>
-              </div>
-            </div>
-            <div
-              :for={msg <- @chat_messages}
-              class={[
-                "flex",
-                if msg.role == :user do
-                  "justify-end"
-                else
-                  "justify-start"
-                end
-              ]}
-            >
-              <div class={[
-                "max-w-xs rounded-lg px-4 py-2",
-                if msg.role == :user do
-                  "bg-primary text-primary-content"
-                else
-                  "bg-base-300 text-base-content"
-                end,
-                if Map.get(msg, :error) do
-                  "border border-error"
-                else
-                  ""
-                end
-              ]}>
-                <p class="text-sm whitespace-pre-wrap">{msg.content}</p>
-                <span
-                  :if={Map.get(msg, :streaming) && msg.content == ""}
-                  class="loading loading-dots loading-xs"
-                />
-              </div>
-            </div>
-          </div>
-
-          <%!-- Chat Input --%>
-          <div class="border-t border-base-300 p-4">
-            <form phx-submit="send_message" class="flex gap-2">
-              <input
-                type="text"
-                name="message"
-                placeholder={
-                  if @chat_loading, do: "Kovy is thinking…", else: "Ask about this bike..."
-                }
-                class="input input-bordered input-sm flex-1"
-                autocomplete="off"
-                disabled={@chat_loading}
-              />
-              <button type="submit" class="btn btn-primary btn-sm" disabled={@chat_loading}>
-                <span :if={@chat_loading} class="loading loading-spinner loading-xs" />
-                <.icon :if={!@chat_loading} name="hero-paper-airplane" class="size-4" />
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <%!-- Mobile Chat FAB — only visible below lg when chat is closed --%>
-    <button
-      :if={!@chat_open}
-      id="mobile-chat-fab"
-      phx-click="toggle_chat"
-      class="lg:hidden fixed bottom-6 right-6 btn btn-primary btn-circle btn-lg shadow-xl z-40"
-      aria-label="Open chat with Kovy"
-    >
-      <.icon name="hero-chat-bubble-left-ellipsis" class="size-6" />
-    </button>
-
-    <%!-- Mobile Chat Drawer — full-screen overlay below lg --%>
-    <div
-      :if={@chat_open}
-      id="mobile-chat-drawer"
-      class="lg:hidden fixed inset-0 z-50 flex flex-col bg-base-100"
-    >
-      <%!-- Mobile Chat Header with close button --%>
-      <div class="bg-primary text-primary-content p-4 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <div class="size-8 rounded-full bg-primary-content/20 flex items-center justify-center">
-            <.icon name="hero-sparkles" class="size-5" />
-          </div>
-          <div>
-            <h2 class="font-bold">Kovy</h2>
-            <p class="text-xs opacity-75">Ask about the {@bike.name}</p>
-          </div>
-        </div>
-        <button
-          id="mobile-chat-close"
-          phx-click="toggle_chat"
-          class="btn btn-ghost btn-sm btn-circle text-primary-content"
-          aria-label="Close chat"
-        >
-          <.icon name="hero-x-mark" class="size-5" />
-        </button>
-      </div>
-
-      <%!-- Mobile Chat Messages --%>
-      <div
-        id="mobile-chat-messages"
-        phx-hook="ScrollBottom"
-        class="flex-1 overflow-y-auto p-4 space-y-4"
-      >
-        <div
-          :if={Enum.empty?(@chat_messages)}
-          class="h-full flex flex-col items-center justify-center text-base-content/50 text-center text-sm gap-4"
-        >
-          <div>
-            <p class="font-bold mb-2">Hey! I'm Kovy 👋</p>
-            <p>Ask me anything about the {@bike.name}.</p>
-          </div>
-          <div class="flex flex-wrap justify-center gap-2">
-            <button
-              phx-click="send_message"
-              phx-value-message="How does this compare to a KTM?"
-              class="btn btn-xs btn-outline"
-            >
-              vs KTM?
-            </button>
-            <button
-              phx-click="send_message"
-              phx-value-message="What should I expect for maintenance?"
-              class="btn btn-xs btn-outline"
-            >
-              Maintenance?
-            </button>
-            <button
-              phx-click="send_message"
-              phx-value-message="What upgrades do riders make?"
-              class="btn btn-xs btn-outline"
-            >
-              Upgrades?
-            </button>
-          </div>
-        </div>
-        <div
-          :for={msg <- @chat_messages}
-          class={[
-            "flex",
-            if msg.role == :user do
-              "justify-end"
-            else
-              "justify-start"
-            end
+      <%!-- Right Column: Chat via ChatLive component (desktop + mobile) --%>
+      <div class="lg:col-span-1">
+        <.live_component
+          module={ChatLive}
+          id="kovy-chat"
+          chat_messages={@chat_messages}
+          chat_loading={@chat_loading}
+          chat_open={@chat_open}
+          context_label={"the #{@bike.name}"}
+          placeholder="Ask about this bike..."
+          quick_asks={[
+            %{label: "vs KTM?", message: "How does this compare to a KTM?"},
+            %{label: "Maintenance?", message: "What should I expect for maintenance?"},
+            %{label: "Upgrades?", message: "What upgrades do riders make?"}
           ]}
-        >
-          <div class={[
-            "max-w-xs rounded-lg px-4 py-2",
-            if msg.role == :user do
-              "bg-primary text-primary-content"
-            else
-              "bg-base-300 text-base-content"
-            end,
-            if Map.get(msg, :error) do
-              "border border-error"
-            else
-              ""
-            end
-          ]}>
-            <p class="text-sm whitespace-pre-wrap">{msg.content}</p>
-            <span
-              :if={Map.get(msg, :streaming) && msg.content == ""}
-              class="loading loading-dots loading-xs"
-            />
-          </div>
-        </div>
-      </div>
-
-      <%!-- Mobile Chat Input --%>
-      <div class="border-t border-base-300 p-4 pb-safe">
-        <form phx-submit="send_message" class="flex gap-2">
-          <input
-            type="text"
-            name="message"
-            placeholder={if @chat_loading, do: "Kovy is thinking…", else: "Ask about this bike..."}
-            class="input input-bordered input-sm flex-1"
-            autocomplete="off"
-            disabled={@chat_loading}
-          />
-          <button type="submit" class="btn btn-primary btn-sm" disabled={@chat_loading}>
-            <span :if={@chat_loading} class="loading loading-spinner loading-xs" />
-            <.icon :if={!@chat_loading} name="hero-paper-airplane" class="size-4" />
-          </button>
-        </form>
+        />
       </div>
     </div>
     """
-  end
-
-  @impl true
-  def handle_event("toggle_chat", _params, socket) do
-    {:noreply, assign(socket, :chat_open, !socket.assigns.chat_open)}
   end
 
   @impl true
@@ -657,17 +438,16 @@ defmodule KoveWeb.BikeDetailsLive do
     {:noreply, assign(socket, :current_image_index, idx)}
   end
 
-  @impl true
-  def handle_event("send_message", %{"message" => message}, socket) do
-    message = String.trim(message)
+  # ── Chat callbacks from ChatLive component ──
 
+  @impl true
+  def handle_info({:chat_send, message}, socket) do
     if message == "" || socket.assigns.chat_loading do
       {:noreply, socket}
     else
       user_msg = %{role: :user, content: message}
       assistant_msg = %{role: :assistant, content: "", streaming: true}
 
-      # Build the history to send to the API (existing + new user message, no empty assistant)
       history = socket.assigns.chat_messages ++ [user_msg]
 
       KovyAssistant.send_message(socket.assigns.bike, history)
@@ -678,6 +458,11 @@ defmodule KoveWeb.BikeDetailsLive do
        |> assign(:chat_loading, true)
        |> assign(:chat_open, true)}
     end
+  end
+
+  @impl true
+  def handle_info(:chat_toggle, socket) do
+    {:noreply, assign(socket, :chat_open, !socket.assigns.chat_open)}
   end
 
   # ── Streaming callbacks from KovyAssistant ──

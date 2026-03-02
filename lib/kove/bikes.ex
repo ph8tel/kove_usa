@@ -9,11 +9,32 @@ defmodule Kove.Bikes do
 
   @doc """
   Returns all bikes ordered by category then name, with engine and hero image preloaded.
+  Used for the storefront grid cards.
   """
   def list_bikes do
     Bike
     |> order_by([b], asc: b.category, asc: b.name)
     |> preload([:engine, :images])
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns all bikes with every association preloaded (engine, chassis, dimensions,
+  features, images, descriptions). Used by the catalog chat prompt builder.
+  """
+  def list_bikes_full do
+    descriptions_query = from(d in Kove.Descriptions.Description, select: %{d | embedding: nil})
+
+    Bike
+    |> order_by([b], asc: b.category, asc: b.name)
+    |> preload([
+      :engine,
+      :chassis_spec,
+      :dimension,
+      :bike_features,
+      :images,
+      descriptions: ^descriptions_query
+    ])
     |> Repo.all()
   end
 

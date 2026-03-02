@@ -238,4 +238,124 @@ defmodule Kove.KovyAssistant.PromptTest do
       assert prompt =~ "concise"
     end
   end
+
+  # ── Catalog prompt tests ─────────────────────────────────────────────
+
+  describe "build_catalog_system_prompt/2" do
+    test "includes Kovy catalog personality" do
+      bikes = [
+        build_bike(),
+        build_bike(%{name: "2026 Kove 450 Rally", slug: "2026-kove-450-rally", category: :rally})
+      ]
+
+      prompt = Prompt.build_catalog_system_prompt(bikes, "hello")
+
+      assert prompt =~ "You are Kovy"
+      assert prompt =~ "catalog assistant"
+      assert prompt =~ "CATALOG SUMMARY"
+    end
+
+    test "always includes a compact summary for every bike" do
+      bike_a = build_bike(%{name: "2026 Kove 800X Pro", slug: "2026-kove-800x-pro"})
+
+      bike_b =
+        build_bike(%{name: "2026 Kove 450 Rally", slug: "2026-kove-450-rally", category: :rally})
+
+      prompt = Prompt.build_catalog_system_prompt([bike_a, bike_b], "hello")
+
+      assert prompt =~ "2026 Kove 800X Pro"
+      assert prompt =~ "2026 Kove 450 Rally"
+      assert prompt =~ "CATALOG SUMMARY"
+    end
+
+    test "includes detailed specs only for matched bikes" do
+      bike_a = build_bike(%{name: "2026 Kove 800X Pro", slug: "2026-kove-800x-pro"})
+
+      bike_b =
+        build_bike(%{name: "2026 Kove 450 Rally", slug: "2026-kove-450-rally", category: :rally})
+
+      prompt = Prompt.build_catalog_system_prompt([bike_a, bike_b], "tell me about the 800X")
+
+      assert prompt =~ "DETAILED SPECS FOR RELEVANT BIKES"
+      assert prompt =~ "=== BIKE ==="
+      assert prompt =~ "2026 Kove 800X Pro"
+      # The 450 Rally should NOT have detailed specs
+      refute prompt =~ "=== BIKE ===\nModel: 2026 Kove 450 Rally"
+    end
+
+    test "includes no detailed section when nothing matches" do
+      bike = build_bike()
+      prompt = Prompt.build_catalog_system_prompt([bike], "what is the meaning of life?")
+
+      refute prompt =~ "DETAILED SPECS"
+      refute prompt =~ "=== BIKE ==="
+    end
+
+    test "includes rider-type survey instruction" do
+      prompt = Prompt.build_catalog_system_prompt([build_bike()], "help me choose")
+
+      assert prompt =~ "riding experience"
+      assert prompt =~ "terrain"
+      assert prompt =~ "budget"
+    end
+  end
+
+  describe "relevant_bikes/2" do
+    test "matches by bike name fragments" do
+      bike_a = build_bike(%{name: "2026 Kove 800X Pro", slug: "2026-kove-800x-pro"})
+
+      bike_b =
+        build_bike(%{name: "2026 Kove 450 Rally", slug: "2026-kove-450-rally", category: :rally})
+
+      result = Prompt.relevant_bikes([bike_a, bike_b], "Tell me about the 800X")
+      assert length(result) == 1
+      assert hd(result).name == "2026 Kove 800X Pro"
+    end
+
+    test "matches by category keyword" do
+      bike_a =
+        build_bike(%{name: "2026 Kove 800X Pro", slug: "2026-kove-800x-pro", category: :adv})
+
+      bike_b =
+        build_bike(%{name: "2026 Kove 450 Rally", slug: "2026-kove-450-rally", category: :rally})
+
+      result = Prompt.relevant_bikes([bike_a, bike_b], "What rally bikes do you have?")
+      assert length(result) == 1
+      assert hd(result).name == "2026 Kove 450 Rally"
+    end
+
+    test "matches multiple bikes when both are mentioned" do
+      bike_a = build_bike(%{name: "2026 Kove 800X Pro", slug: "2026-kove-800x-pro"})
+
+      bike_b =
+        build_bike(%{name: "2026 Kove 450 Rally", slug: "2026-kove-450-rally", category: :rally})
+
+      result = Prompt.relevant_bikes([bike_a, bike_b], "Compare the 800X and 450 Rally")
+      assert length(result) == 2
+    end
+
+    test "returns empty list when nothing matches" do
+      bike = build_bike()
+      result = Prompt.relevant_bikes([bike], "what is the weather?")
+      assert result == []
+    end
+
+    test "matching is case-insensitive" do
+      bike = build_bike(%{name: "2026 Kove 800X Pro", slug: "2026-kove-800x-pro"})
+      result = Prompt.relevant_bikes([bike], "TELL ME ABOUT THE 800x")
+      assert length(result) == 1
+    end
+
+    test "matches by adventure category keyword" do
+      bike = build_bike(%{name: "2026 Kove 800X Pro", slug: "2026-kove-800x-pro", category: :adv})
+      result = Prompt.relevant_bikes([bike], "What adventure bikes do you sell?")
+      assert length(result) == 1
+    end
+
+    test "matches by motocross category keyword" do
+      bike = build_bike(%{name: "2026 Kove MX 250F", slug: "2026-kove-mx-250f", category: :mx})
+      result = Prompt.relevant_bikes([bike], "Do you have any motocross bikes?")
+      assert length(result) == 1
+    end
+  end
 end

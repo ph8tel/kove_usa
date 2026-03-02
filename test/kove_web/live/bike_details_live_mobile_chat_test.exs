@@ -44,15 +44,15 @@ defmodule KoveWeb.BikeDetailsLiveMobileChatTest do
     test "shows FAB button on mount", %{conn: conn, bike: bike} do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
-      assert has_element?(view, "#mobile-chat-fab")
+      assert has_element?(view, "#kovy-chat-fab")
     end
 
     test "FAB is hidden when chat drawer is open", %{conn: conn, bike: bike} do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
-      render_click(view, "toggle_chat")
+      view |> element("#kovy-chat-fab") |> render_click()
 
-      refute has_element?(view, "#mobile-chat-fab")
+      refute has_element?(view, "#kovy-chat-fab")
     end
   end
 
@@ -60,41 +60,41 @@ defmodule KoveWeb.BikeDetailsLiveMobileChatTest do
     test "drawer is hidden on mount", %{conn: conn, bike: bike} do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
-      refute has_element?(view, "#mobile-chat-drawer")
+      refute has_element?(view, "#kovy-chat-drawer")
     end
 
     test "toggle_chat opens the drawer", %{conn: conn, bike: bike} do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
-      render_click(view, "toggle_chat")
+      view |> element("#kovy-chat-fab") |> render_click()
 
-      assert has_element?(view, "#mobile-chat-drawer")
+      assert has_element?(view, "#kovy-chat-drawer")
     end
 
     test "toggle_chat closes the drawer when open", %{conn: conn, bike: bike} do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
       # Open
-      render_click(view, "toggle_chat")
-      assert has_element?(view, "#mobile-chat-drawer")
+      view |> element("#kovy-chat-fab") |> render_click()
+      assert has_element?(view, "#kovy-chat-drawer")
 
       # Close
-      render_click(view, "toggle_chat")
-      refute has_element?(view, "#mobile-chat-drawer")
+      view |> element("#kovy-chat-close") |> render_click()
+      refute has_element?(view, "#kovy-chat-drawer")
     end
 
     test "drawer has a close button", %{conn: conn, bike: bike} do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
-      render_click(view, "toggle_chat")
+      view |> element("#kovy-chat-fab") |> render_click()
 
-      assert has_element?(view, "#mobile-chat-close")
+      assert has_element?(view, "#kovy-chat-close")
     end
 
     test "drawer shows Kovy header with bike name", %{conn: conn, bike: bike} do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
-      html = render_click(view, "toggle_chat")
+      html = view |> element("#kovy-chat-fab") |> render_click()
 
       assert html =~ "Kovy"
       assert html =~ bike.name
@@ -103,7 +103,7 @@ defmodule KoveWeb.BikeDetailsLiveMobileChatTest do
     test "drawer shows quick-ask buttons when no messages", %{conn: conn, bike: bike} do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
-      html = render_click(view, "toggle_chat")
+      html = view |> element("#kovy-chat-fab") |> render_click()
 
       assert html =~ "vs KTM?"
       assert html =~ "Maintenance?"
@@ -113,18 +113,18 @@ defmodule KoveWeb.BikeDetailsLiveMobileChatTest do
     test "drawer has chat input form", %{conn: conn, bike: bike} do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
-      render_click(view, "toggle_chat")
+      view |> element("#kovy-chat-fab") |> render_click()
 
-      assert has_element?(view, "#mobile-chat-drawer form")
-      assert has_element?(view, "#mobile-chat-drawer input[name=message]")
+      assert has_element?(view, "#kovy-chat-mobile-form")
+      assert has_element?(view, "#kovy-chat-mobile-form input[name=message]")
     end
 
     test "drawer has mobile-specific ScrollBottom hook", %{conn: conn, bike: bike} do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
-      render_click(view, "toggle_chat")
+      view |> element("#kovy-chat-fab") |> render_click()
 
-      assert has_element?(view, "#mobile-chat-messages[phx-hook=ScrollBottom]")
+      assert has_element?(view, "#kovy-chat-mobile-messages[phx-hook=ScrollBottom]")
     end
   end
 
@@ -137,14 +137,14 @@ defmodule KoveWeb.BikeDetailsLiveMobileChatTest do
       {:ok, view, _html} = live(conn, ~p"/bikes/#{bike.slug}")
 
       # Chat drawer should be closed initially
-      refute has_element?(view, "#mobile-chat-drawer")
+      refute has_element?(view, "#kovy-chat-drawer")
 
       # Send a message — drawer should auto-open
       view
-      |> form("form", %{message: "Tell me about this bike"})
+      |> form("#kovy-chat-form", %{message: "Tell me about this bike"})
       |> render_submit()
 
-      assert has_element?(view, "#mobile-chat-drawer")
+      assert has_element?(view, "#kovy-chat-drawer")
     end
   end
 end

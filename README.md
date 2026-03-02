@@ -1,5 +1,12 @@
 # Kove Moto USA
 
+> ## TODO
+>
+> - [ ] **True vector RAG** — Populate the existing `descriptions.embedding` column (`vector(1536)`) via OpenAI's `/v1/embeddings` endpoint using Req. Swap the keyword-based `Prompt.relevant_bikes/2` for a pgvector cosine similarity query against `descriptions` to retrieve the most relevant chunks per user message.
+> - [ ] **Rider-type survey in chat** — Extend the catalog chat (Kovy on the storefront) with a structured conversational survey: ask about riding experience, terrain, intended use, and budget, then recommend a specific model. The system prompt already primes Kovy for this flow — next step is adding structured state tracking (survey stage, answers collected) in the LiveView assigns so the UI can show progress and the final recommendation card.
+> - [ ] **Embedding generation Mix task** — `mix kove.generate_embeddings` to batch-process all `descriptions` rows, call OpenAI embeddings API, and upsert the `embedding` column. Include rate limiting and progress output.
+> - [ ] **Semantic search API** — Add `Bikes.search_descriptions(query, opts)` that embeds the query string and runs a pgvector nearest-neighbor search, returning ranked description + bike pairs.
+
 A Phoenix LiveView application for the Kove Moto USA motorcycle catalog with **Kovy**, an AI-powered bike assistant that answers technical questions grounded in real spec data.
 
 ## Tech Stack
