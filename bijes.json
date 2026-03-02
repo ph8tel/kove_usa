@@ -1,0 +1,438 @@
+[
+{
+    "product": "2026 Kove 800X Rally",
+    "status": "50-State Street Legal",
+    "msrp": "$12,999",
+    "marketing_text": [
+        "Are you craving an Adventure bike with some muscle under the tank? Something that you can actually romp on and throw around like a dirtbike? If so, the ground-breaking, roost-throwing Kove 800X Rally is for you!",
+        "The new Kove 800X Rally is ready to re-write the rulebook on what an Adventure bike can be. With more power on tap and a dry weight hovering around 100 POUNDS less than the most popular bikes on the ADV market; this Kove is going to be a game-changer.",
+        "The center of the 800X is the 799cc, DOHC Parallel Twin that churns out an impressive 95 horsepower. Bosch EFI takes care of the fueling duties.",
+        "The Kove 800X Rally is equally impressive in the chassis department. The most noteworthy trait is the weight, or lack there-of; the 800X Rally weighs only 364 pounds dry, making it the lightest ADV bike on the market.",
+        "The fork is the same 49mm Yu-Ann from the 450 Rally, but sprung and valved for the 800. It is held in place by a billet triple clamp. Rear suspension duties are handled by a linkage-equipped Yu-Ann piggyback shock with adjustable high-speed compression, low-speed compression, and rebound dampening.",
+        "The front brake on the 800X Rally model is a single 310mm disc that will slow this beast down in a hurry. The ABS system is quickly and easily switched between On, Front Wheel ABS Only, and completely Off.",
+        "Rounding out the package is a 5-gallon fuel tank, which can deliver up to 250 miles of range on a single fill-up. All of it is placed low in the subframe for a lower center of gravity and better feel."
+    ],
+    "specifications": {
+        "engine": {
+            "engine_type": "Twin Cylinder, DOHC",
+            "cooling": "Liquid-Cooled",
+            "displacement": "799cc",
+            "bore_x_stroke": "88mm × 65.7mm",
+            "fuel_system": "Bosch EFI",
+            "transmission": "6-Speed",
+            "clutch": "Oil Bath, Multi-Disc, Cable-Actuated",
+            "starter": "Electric"
+        },
+        "chassis": {
+            "front_suspension": "49mm Yu-Ann (from 450 Rally, sprung/valved for 800)",
+            "rear_suspension": "Linkage-equipped Yu-Ann piggyback shock",
+            "adjustability": "High-speed compression, low-speed compression, rebound dampening",
+            "triple_clamp": "Billet",
+            "front_brake": "Single 310mm disc",
+            "abs": "Switchable (On, Front Only, Off) with memory function",
+            "wheels": "Off-road wheels with heavy duty spokes",
+            "features": [
+                "Integrated crash bars",
+                "Skid plate",
+                "Digital TFT display",
+                "Hi-output LED lighting"
+            ]
+        },
+        "dimensions": {
+            "dry_weight": "364 lbs",
+            "fuel_capacity": "5 gallons",
+            "estimated_range": "Up to 250 miles"
+        }
+    },
+    "images": [
+        {
+            "alt": "KOVEGREEN L45.jpg",
+            "url": "https://www.kovemotousa.com/5"
+        },
+        {
+            "alt": "KOVEGREEN R45.jpg",
+            "url": "https://www.kovemotousa.com/6"
+        },
+        {
+            "alt": "KOVEGREEN R.jpg",
+            "url": "https://www.kovemotousa.com/7"
+        },
+        {
+            "alt": "KOVEGREEN L.jpg",
+            "url": "https://www.kovemotousa.com/8"
+        },
+        {
+            "alt": "GOLD R.jpg",
+            "url": "https://www.kovemotousa.com/9"
+        },
+        {
+            "alt": "GOLD L.jpg",
+            "url": "https://www.kovemotousa.com/models-current0"
+        },
+        {
+            "alt": "EPA Certified Logo",
+            "url": "https://www.kovemotousa.com/models-current1"
+        }
+    ]
+},
+{
+  "product": "2026 Kove 800X Pro",
+  "status": "Certified 50-State Street Legal",
+  "msrp": "$11,299",
+  "marketing_text": [
+    "The new Kove 800X Pro model is ready to take the ADV market by storm; it strikes the perfect blend of light-weight off-road capability and on-road comfort and performance. If you’re looking for an incredibly versatile motorcycle at an incredible price, the 800X Pro is for you!",
+    "The center of the 800X is the 799cc, DOHC Parallel Twin that churns out an impressive 95 horsepower. Bosch EFI takes care of the fueling duties.",
+    "In the chassis department, the first thing you will notice about the 800X Pro is the weight, or lack there-of. With a curb weight of only 408 pounds, the 800X Pro is at least 50 pounds lighter than current offerings from Japan, Austria, and Germany.",
+    "Thanks to the low center of gravity provided by the subframe-mounted fuel tank, you’ll enjoy more confidence and better maneuverability in rough terrain.",
+    "The 5-gallon capacity will ensure a range of at least 250 miles, so you can spend more time on the road and less time at the filling station. The integrated windscreen will keep you protected from the elements, and a quick glance at the digital TFT display will keep you up to date with speed, rpm, engine temp, fuel level, ride mode (ECO, SPORT, RAIN) and more.",
+    "The front brake system on the 800X Pro model features dual 310mm discs that will slow this beast down in a hurry. The ABS system is quickly and easily switched between On, Front Wheel ABS Only, and completely Off.",
+    "In the suspension department, the KYB Fork and Shock keep you comfortable and under control when the going gets rough. Fully adjustable compression and rebound on both ends allows you to fine-tune your ride for the terrain."
+  ],
+  "specifications": {
+    "engine": {
+      "engine_type": "Twin Cylinder, DOHC Parallel Twin",
+      "cooling": "Liquid-Cooled",
+      "displacement": "799cc",
+      "bore_x_stroke": "88mm × 65.7mm",
+      "compression_ratio": "14:1",
+      "fuel_system": "Bosch EFI",
+      "transmission": "6-Speed",
+      "clutch": "Oil Bath, Multi-Disc, Cable-Actuated",
+      "starter": "Electric",
+      "horsepower": "95 HP"
+    },
+    "chassis": {
+      "frame_type": "Steel Perimeter",
+      "front_suspension": "KYB 48mm Upside Fork, Adjustable Compression & Rebound",
+      "front_travel": "9.5”",
+      "rear_suspension": "KYB Piggy-Back Shock, Adjustable Rebound & Compression",
+      "rear_travel": "9.5”",
+      "front_brake": "310mm Dual Disc, 4-Piston Caliper, Selectable ABS",
+      "rear_brake": "240mm Disc, Single-Piston Caliper, Selectable ABS",
+      "wheels": "21” Front / 18” Rear, Spoked and Tubeless",
+      "tires": "90/90-21 Front, 150/70-18 Rear",
+      "steering_angle": "35 Degrees",
+      "rake_angle": "26.15 Degrees",
+      "other_features": [
+        "Hi-Output LED Lighting",
+        "Fast Ace Steering Stabilizer",
+        "Integrated Crash Bars",
+        "Skid Plate"
+      ]
+    },
+    "dimensions": {
+      "overall_size_lxwxh": "88.1” x 34.7” x 55.1”",
+      "wheelbase": "59.5”",
+      "seat_height": "34.5”",
+      "ground_clearance": "10.8”",
+      "curb_weight": "408 lbs",
+      "fuel_capacity": "5 Gallons",
+      "estimated_range": "250+ Miles"
+    }
+  },
+  "images": [
+    {
+      "alt": "2026 Kove 800X Pro Green Front Profile",
+      "url": "https://www.kovemotousa.com/3.png"
+    },
+    {
+      "alt": "2026 Kove 800X Pro Side View",
+      "url": "https://www.kovemotousa.com/1%20copy.png"
+    },
+    {
+      "alt": "2026 Kove 800X Pro Action Shot",
+      "url": "https://www.kovemotousa.com/2.png"
+    },
+    {
+      "alt": "2026 Kove 800X Pro Rear Profile",
+      "url": "https://www.kovemotousa.com/4.png"
+    },
+    {
+      "alt": "EPA Certified Logo",
+      "url": "https://www.kovemotousa.com/images.jpg"
+    }
+  ]
+},
+{
+  "product": "2026 Kove 450 Rally Pro Off-Road",
+  "status": "Competition Model Only",
+  "msrp": "$9,499",
+  "marketing_text": [
+    "The heart of the KOVE 450 RALLY is a 449cc DOHC single that is cooled by large dual radiators with an electric cooling fan each. In addition, an external oil cooler keeps the lifeblood of the engine in cool while providing additional oil capacity for extended service intervals. Fueling duties are handled via fuel injection, controlled by a Bosch ECU.",
+    "The engine is housed in a steel semi-perimeter frame that house three separate fuel tanks. A long, flat, comfortable seat sits atop the bike and will provide you with hours of comfortable riding. When it’s time to check the airfilter, simply tug on the seat release cable and the seat pops off, revealing a huge foam airfilter element that sits up high and is well protected from water and dust.",
+    "Available in both Low Seat and High Seat models, Kove makes a 450 Rally to fit you no matter your inseam.",
+    "Fully adjustable 49mm YU-AN forks and a matching YU-AN reservoir monoshock suspend the 450 RALLY and give you 12” of suspension travel on the High Seat model.",
+    "High-intensity LEDs light up the night and make sure you can easily find where you’re going if your adventure stretches on past sunset.",
+    "The KOVE 450 RALLY is the ultimate lightweight ADV bike that you have been dreaming of! KOVE has finally struck the perfect balance; lightweight agility and off-road suspension meet distance-friendly ergonomics and rally-raid styling. The 450 RALLY is not simply rally-inspired; it’s rally-BRED!",
+    "The 2025 Pro Off-Road Models now come with the upgrades riders have been asking for! Full Titanium Closed-Course Exhaust System, Race-tuned ECU, 51-tooth Rear Sprocket, and Mousses are now standard equipment!"
+  ],
+  "specifications": {
+    "engine": {
+      "engine_type": "Single Cylinder, DOHC",
+      "displacement": "449cc",
+      "bore_x_stroke": "94.5mm x 64mm",
+      "cooling": "Liquid-Cooled with External Oil Cooler & Dual Fans",
+      "fuel_system": "Bosch EFI / ECU",
+      "transmission": "6-Speed",
+      "clutch": "Oil Bath, Multi-Disc, Cable-Actuated",
+      "starter": "Electric",
+      "exhaust": "Full Titanium Closed-Course System",
+      "sprocket": "51-tooth Rear"
+    },
+    "chassis": {
+      "frame_type": "Steel Semi-Perimeter",
+      "front_suspension": "49mm YU-AN Upside Fork, Fully Adjustable",
+      "rear_suspension": "YU-AN Reservoir Monoshock, Fully Adjustable",
+      "suspension_travel": "12” (High Seat) / 10” (Low Seat)",
+      "front_brake": "280mm Disc, 2-Piston Caliper, Selectable ABS",
+      "rear_brake": "240mm Disc, Single-Piston Caliper, Selectable ABS",
+      "wheels": "Spoked with Mousse Foam Inserts",
+      "steering_angle": "38.5 Degrees",
+      "rake_angle": "28 Degrees",
+      "features": [
+        "Integrated Navigation Tower",
+        "Hi-Output LED Lighting",
+        "Digital TFT Display",
+        "Quick-release Seat"
+      ]
+    },
+    "dimensions": {
+      "overall_size_lxwxh": "86” x 31” x 55”",
+      "wheelbase": "58.7”",
+      "seat_height": "37.8” (High Seat) / 36” (Low Seat)",
+      "ground_clearance": "12.2”",
+      "dry_weight": "319.7 lbs",
+      "fuel_capacity": "8 Gallons (3 separate tanks)",
+      "estimated_range": "300+ Miles"
+    }
+  },
+  "images": [
+    {
+      "alt": "2026 Kove 450 Rally Pro Off-Road Action",
+      "url": "https://www.kovemotousa.com/450-rally-standard-2026-hero.jpg"
+    },
+    {
+      "alt": "KOVE 450 RALLY Studio Image 1",
+      "url": "https://www.kovemotousa.com/IMG_5946.jpg"
+    },
+    {
+      "alt": "KOVE 450 RALLY Studio Image 2",
+      "url": "https://www.kovemotousa.com/IMG_5945.jpg"
+    },
+    {
+      "alt": "KOVE 450 RALLY Studio Image 3",
+      "url": "https://www.kovemotousa.com/IMG_5947.jpg"
+    },
+    {
+      "alt": "EPA Certified Logo",
+      "url": "https://www.kovemotousa.com/images.jpg"
+    }
+  ]
+},
+{
+  "product": "2026 450 Rally Street Legal",
+  "status": "50-State Street Legal",
+  "msrp": "$9,299",
+  "marketing_text": [
+    "The heart of the KOVE 450 RALLY is a 449cc DOHC single that is cooled by large dual radiators with an electric cooling fan each. In addition, an external oil cooler keeps the lifeblood of the engine in cool while providing additional oil capacity for extended service intervals. Fueling duties are handled via fuel injection, controlled by a Bosch ECU.",
+    "The engine is housed in a steel semi-parameter frame that house three separate fuel tanks. A long, flat, comfortable seat sits atop the bike and will provide you with hours of comfortable riding. When it’s time to check the airfilter, simply tug on the seat release cable and the seat pops off, revealing a huge foam airfilter element that sits up high and is well protected from water and dust.",
+    "Available in both Low Seat and High Seat models, Kove makes a 450 Rally to fit you no matter your inseam.",
+    "Fully adjustable 49mm YU-AN forks and a matching YU-AN reservoir monoshock suspend the 450 RALLY and give you 12” of suspension travel on the High Seat model.",
+    "High-intensity LEDs light up the night and make sure you can easily find where you’re going if your adventure stretches on past sunset.",
+    "The KOVE 450 RALLY is the ultimate lightweight ADV bike that you have been dreaming of! What’s EXTRA special about this bike? It’s street-legal in all 50 states! Regardless of where you live, you can take the Kove 450 Rally anywhere you dare to ride!",
+    "KOVE has finally struck the perfect balance; lightweight agility and off-road suspension meet distance-friendly ergonomics and rally-raid styling. The 450 RALLY is not simply rally-inspired; it’s rally-BRED! Designed from day one as a rally motorcycle capable of competing toe-to-toe with the highest dollar factory race bikes, the KOVE 450 RALLY is more than up to the task of carrying you on your next adventure!"
+  ],
+  "specifications": {
+    "engine": {
+      "engine_type": "Single Cylinder, DOHC",
+      "displacement": "449cc",
+      "bore_x_stroke": "94.5mm x 64mm",
+      "cooling": "Liquid-Cooled with External Oil Cooler & Dual Fans",
+      "fuel_system": "Bosch EFI / ECU",
+      "transmission": "6-Speed",
+      "clutch": "Oil Bath, Multi-Disc, Cable-Actuated",
+      "starter": "Electric"
+    },
+    "chassis": {
+      "frame_type": "Steel Semi-Perimeter",
+      "front_suspension": "49mm YU-AN Upside Fork, Fully Adjustable",
+      "rear_suspension": "YU-AN Reservoir Monoshock, Fully Adjustable",
+      "suspension_travel": "12” (High Seat) / 10” (Low Seat)",
+      "front_brake": "280mm Disc, 2-Piston Caliper, Selectable ABS",
+      "rear_brake": "240mm Disc, Single-Piston Caliper, Selectable ABS",
+      "abs_system": "Switchable (Front/Back) with memory function",
+      "wheels": "Spoked",
+      "steering_angle": "38.5 Degrees",
+      "rake_angle": "28 Degrees",
+      "features": [
+        "Integrated Navigation Tower",
+        "Hi-Output LED Lighting",
+        "Digital TFT Display",
+        "Quick-release Seat"
+      ]
+    },
+    "dimensions": {
+      "overall_size_lxwxh": "86” x 31” x 55”",
+      "wheelbase": "58.7”",
+      "seat_height": "37.8” (High Seat) / 36” (Low Seat)",
+      "ground_clearance": "12.2” (High Seat) / 10.6\" (Low Seat)",
+      "dry_weight": "320 lbs",
+      "fuel_capacity": "8 Gallons (3 separate tanks)",
+      "estimated_range": "300+ Miles"
+    }
+  },
+  "images": [
+    {
+      "alt": "2026 450 Rally Street Legal Action",
+      "url": "https://www.kovemotousa.com/450-rally-standard-2026-hero.jpg"
+    },
+    {
+      "alt": "Studio Image Right",
+      "url": "https://www.kovemotousa.com/松石绿右.jpg"
+    },
+    {
+      "alt": "Studio Image 45 Degree",
+      "url": "https://www.kovemotousa.com/松石绿45.png"
+    },
+    {
+      "alt": "Studio Image Left",
+      "url": "https://www.kovemotousa.com/松石绿左.jpg"
+    },
+    {
+      "alt": "EPA Certified Logo",
+      "url": "https://www.kovemotousa.com/images.jpg"
+    }
+  ]
+},
+{
+  "product": "2026 Kove MX450",
+  "status": "Competition Model Only",
+  "msrp": "$7,999",
+  "marketing_text": [
+    "The Kove MX450 is an Open-Class, big-bore weapon that is ready to throw some roost, stretch your arms, and get your pulse going! An excellent blend of affordability and performance, the MX450 proves that you don’t need to spend a fortune to have a blast on the track!",
+    "With an MSRP that is thousands lower than the competition, you might expect the MX450 to be lacking features or quality, but this isn’t the case with Kove!",
+    "At first glance, you’ll notice the quality of the plastic and how well the body work integrates and fits together. Once you swing a leg over it, you’ll feel how flat and narrow the rider cockpit is, and there is nothing on the shrouds or side panels that sticks out to catch your boots or knee braces.",
+    "In addition, titanium, billet aluminium, and annodized goodies are everywhere, making the MX450 as easy to look at as it is easy on your wallet!",
+    "The suspension is well balanced and fully adjustable; the KYB 48mm fork and Yu-An shock are fully adjustable, and they are easily tuned by any reputable suspension shop.",
+    "The Kove MX450 puts out 52hp at the rear wheel and delivers strong performance that is perfect for 90% of riders out there. With its 5-speed transmission, it’s fun and versatile on the track and the trail.",
+    "In the power department, the 449cc SOHC, EFI engine fires up quickly hot or cold with a press of the electric start button. Complementing the strong and torquey engine is an electronic package with selectable Engine Maps (2), Launch Control, Quick Shift, and a Lap Timer."
+  ],
+  "specifications": {
+    "engine": {
+      "engine_type": "Single Cylinder, SOHC",
+      "cooling": "Liquid-Cooled",
+      "displacement": "449.9cc",
+      "bore_x_stroke": "96mm x 62.15mm",
+      "fuel_system": "Bosch EFI",
+      "transmission": "5-Speed",
+      "clutch": "Oil Bath, Multi-Disc, Hydraulic-Actuated",
+      "starter": "Electric",
+      "max_power": "52 HP @ 9500rpm",
+      "max_torque": "32 ft-lbs @ 7500rpm"
+    },
+    "chassis": {
+      "frame_type": "Steel Perimeter",
+      "front_suspension": "KYB 48mm Inverted Fork, Adjustable Compression & Rebound",
+      "rear_suspension": "YU-AN Piggy-Back Shock, Adjustable Rebound, High/Low-Speed Compression",
+      "suspension_travel": "12”",
+      "front_brake": "290mm Disc, 2-Piston Caliper",
+      "rear_brake": "240mm Disc, Single-Piston Caliper",
+      "wheels": "80/100-21” Front / 110/90-19” Rear",
+      "steering_angle": "38.5 Degrees",
+      "rake_angle": "28 Degrees",
+      "features": [
+        "Hydraulic Clutch",
+        "Titanium Exhaust",
+        "Billet Triple Clamps",
+        "Selectable Engine Maps (2)",
+        "Launch Control",
+        "Quick Shift",
+        "Lap Timer"
+      ]
+    },
+    "dimensions": {
+      "overall_size_lxwxh": "85.4” x 31.7” x 49.8”",
+      "wheelbase": "58.7”",
+      "seat_height": "37.7”",
+      "ground_clearance": "12.2”",
+      "dry_weight": "234 lbs",
+      "fuel_capacity": "1.85 Gallons"
+    }
+  },
+  "images": [
+    {
+      "alt": "2026 Kove MX450 Hero",
+      "url": "https://www.kovemotousa.com/unnamed.png"
+    },
+    {
+      "alt": "MX450 Studio View 1",
+      "url": "https://www.kovemotousa.com/IMG_2044.jpg"
+    },
+    {
+      "alt": "MX450 Studio View 2",
+      "url": "https://www.kovemotousa.com/IMG_2045.jpg"
+    },
+    {
+      "alt": "MX450 Studio View 3",
+      "url": "https://www.kovemotousa.com/IMG_2046.jpg"
+    }
+  ]
+},
+{
+  "product": "2026 Kove MX250",
+  "status": "Competition Model Only",
+  "msrp": "$6,999",
+  "marketing_text": [
+    "The Kove MX250 is a small-bore motocross weapon that excels in blending affordability with performance. For 2026, the MX250 powerplant is completely new from the ground up.",
+    "The new DOHC motor uses finger-follower construction to raise the rev ceiling and reduce the reciprocating mass of the valvetrain. Matching the engine upgrades is a new electronic package with selectable Engine Maps (2), Launch Control, Quick Shift, and a Lap Timer.",
+    "Despite visual similarities to other engines, this motor is unique to Kove, featuring a Kove-designed crankshaft, billet connecting rod, and a lighter flywheel and stator for less rotational mass.",
+    "The chassis is designed to be slim, narrow, and flat. The shrouds won't catch your boots or knee braces, and the seat profile is perfectly flat for easy rider movement.",
+    "The 227lb dry weight matches many of the big-name competitors in the category, providing excellent flickability on the track."
+  ],
+  "specifications": {
+    "engine": {
+      "engine_type": "Single Cylinder, DOHC (Finger-Follower)",
+      "cooling": "Liquid-Cooled",
+      "displacement": "249cc",
+      "bore_x_stroke": "79mm x 51mm",
+      "compression_ratio": "14:1",
+      "fuel_system": "Bosch EFI",
+      "transmission": "6-Speed",
+      "clutch": "Oil Bath, Multi-Disc, Cable-Actuated",
+      "starter": "Electric",
+      "max_power": "40.2 HP @ 12000rpm",
+      "max_torque": "19.9 ft-lbs @ 7000rpm"
+    },
+    "chassis": {
+      "frame_type": "Steel Perimeter",
+      "front_suspension": "KYB 48mm Inverted Fork, 12” Travel",
+      "rear_suspension": "YU-AN Piggy-Back Shock, Adjustable High/Low-Speed Compression, 12” Travel",
+      "front_brake": "290mm Disc, 2-Piston Caliper",
+      "rear_brake": "240mm Disc, Single-Piston Caliper",
+      "wheels": "80/100-21” Front / 100/90-19” Rear",
+      "features": [
+        "Track-Ready Exhaust",
+        "Glide-Plate",
+        "Integrated Rear Fender Grips",
+        "Selectable Engine Maps (2)",
+        "Quick Shift",
+        "Launch Control"
+      ]
+    },
+    "dimensions": {
+      "overall_size_lxwxh": "85.4” x 31.7” x 49.8”",
+      "wheelbase": "58.7”",
+      "seat_height": "37.8”",
+      "ground_clearance": "12.2”",
+      "dry_weight": "227 lbs",
+      "fuel_capacity": "1.45 Gallons"
+    }
+  },
+  "images": [
+    {
+      "alt": "2026 Kove MX250 Hero",
+      "url": "https://www.kovemotousa.com/mx250-hero.jpg"
+    }
+  ]
+}
+]

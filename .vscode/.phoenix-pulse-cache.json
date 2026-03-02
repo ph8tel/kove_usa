@@ -1,0 +1,811 @@
+{
+  "version": "1.0.0",
+  "timestamp": 1772402608685,
+  "workspaceRoot": "/home/ph8l/share/kove_usa",
+  "registries": {
+    "components": {
+      "components": [
+        [
+          "__phoenix_builtins__",
+          [
+            {
+              "name": "link",
+              "moduleName": "Phoenix.Component",
+              "filePath": "/home/ph8l/.vscode/extensions/onsever.phoenix-pulse-1.3.0/node_modules/@phoenix-pulse/language-server/resources/phoenix_component_builtins.ex",
+              "line": 1,
+              "doc": "Phoenix.Component.link/1 – Generates an anchor tag that supports LiveView-aware navigation.",
+              "attributes": [
+                {
+                  "name": "navigate",
+                  "type": "string",
+                  "required": false,
+                  "doc": "Use VerifiedRoutes: `navigate={~p\"/path\"}`"
+                },
+                {
+                  "name": "patch",
+                  "type": "string",
+                  "required": false,
+                  "doc": "Use VerifiedRoutes: `patch={~p\"/path\"}`"
+                },
+                {
+                  "name": "href",
+                  "type": "string",
+                  "required": false,
+                  "doc": "External/legacy target. Prefer `navigate`/`patch` with VerifiedRoutes."
+                },
+                {
+                  "name": "method",
+                  "type": "string",
+                  "required": false
+                },
+                {
+                  "name": "class",
+                  "type": "string",
+                  "required": false
+                },
+                {
+                  "name": "replace",
+                  "type": "boolean",
+                  "required": false
+                }
+              ],
+              "slots": [
+                {
+                  "name": "inner_block",
+                  "required": true,
+                  "attributes": []
+                }
+              ]
+            },
+            {
+              "name": "live_patch",
+              "moduleName": "Phoenix.Component",
+              "filePath": "/home/ph8l/.vscode/extensions/onsever.phoenix-pulse-1.3.0/node_modules/@phoenix-pulse/language-server/resources/phoenix_component_builtins.ex",
+              "line": 1,
+              "doc": "Phoenix.Component.live_patch/1 – Generates a patch navigation link within the same LiveView.",
+              "attributes": [
+                {
+                  "name": "patch",
+                  "type": "string",
+                  "required": true,
+                  "doc": "Use VerifiedRoutes: `patch={~p\"/path\"}`"
+                },
+                {
+                  "name": "class",
+                  "type": "string",
+                  "required": false
+                },
+                {
+                  "name": "replace",
+                  "type": "boolean",
+                  "required": false
+                }
+              ],
+              "slots": [
+                {
+                  "name": "inner_block",
+                  "required": true,
+                  "attributes": []
+                }
+              ]
+            },
+            {
+              "name": "live_redirect",
+              "moduleName": "Phoenix.Component",
+              "filePath": "/home/ph8l/.vscode/extensions/onsever.phoenix-pulse-1.3.0/node_modules/@phoenix-pulse/language-server/resources/phoenix_component_builtins.ex",
+              "line": 1,
+              "doc": "Phoenix.Component.live_redirect/1 – Generates a redirect navigation link to another LiveView or controller.",
+              "attributes": [
+                {
+                  "name": "navigate",
+                  "type": "string",
+                  "required": true,
+                  "doc": "Use VerifiedRoutes: `navigate={~p\"/path\"}`"
+                },
+                {
+                  "name": "class",
+                  "type": "string",
+                  "required": false
+                },
+                {
+                  "name": "replace",
+                  "type": "boolean",
+                  "required": false
+                }
+              ],
+              "slots": [
+                {
+                  "name": "inner_block",
+                  "required": true,
+                  "attributes": []
+                }
+              ]
+            },
+            {
+              "name": "live_component",
+              "moduleName": "Phoenix.Component",
+              "filePath": "/home/ph8l/.vscode/extensions/onsever.phoenix-pulse-1.3.0/node_modules/@phoenix-pulse/language-server/resources/phoenix_component_builtins.ex",
+              "line": 1,
+              "doc": "Phoenix.Component.live_component/1 – Embeds a stateful LiveComponent from HEEx.",
+              "attributes": [
+                {
+                  "name": "module",
+                  "type": "module",
+                  "required": true,
+                  "doc": "LiveComponent module (e.g., `module={MyAppWeb.ModalComponent}`)."
+                },
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": ":for",
+                  "type": "any",
+                  "required": false
+                },
+                {
+                  "name": ":let",
+                  "type": "any",
+                  "required": false
+                }
+              ],
+              "slots": [
+                {
+                  "name": "inner_block",
+                  "required": false,
+                  "attributes": []
+                }
+              ]
+            },
+            {
+              "name": "form",
+              "moduleName": "Phoenix.Component",
+              "filePath": "/home/ph8l/.vscode/extensions/onsever.phoenix-pulse-1.3.0/node_modules/@phoenix-pulse/language-server/resources/phoenix_component_builtins.ex",
+              "line": 1,
+              "doc": "Phoenix.Component.form/1 – Renders a HEEx form with support for :let assigns and action attributes.",
+              "attributes": [
+                {
+                  "name": "for",
+                  "type": "any",
+                  "required": true
+                },
+                {
+                  "name": "as",
+                  "type": "string",
+                  "required": false
+                },
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": false
+                },
+                {
+                  "name": "action",
+                  "type": "string",
+                  "required": false
+                },
+                {
+                  "name": "method",
+                  "type": "string",
+                  "required": false
+                },
+                {
+                  "name": "phx-submit",
+                  "type": "string",
+                  "required": false
+                },
+                {
+                  "name": "phx-change",
+                  "type": "string",
+                  "required": false
+                },
+                {
+                  "name": ":let",
+                  "type": "any",
+                  "required": false
+                }
+              ],
+              "slots": [
+                {
+                  "name": "inner_block",
+                  "required": true,
+                  "attributes": []
+                },
+                {
+                  "name": "actions",
+                  "required": false,
+                  "attributes": []
+                }
+              ]
+            },
+            {
+              "name": "inputs_for",
+              "moduleName": "Phoenix.Component",
+              "filePath": "/home/ph8l/.vscode/extensions/onsever.phoenix-pulse-1.3.0/node_modules/@phoenix-pulse/language-server/resources/phoenix_component_builtins.ex",
+              "line": 1,
+              "doc": "Phoenix.Component.inputs_for/1 – Iterates nested inputs for associations or embeds within a parent form.",
+              "attributes": [
+                {
+                  "name": "field",
+                  "type": "any",
+                  "required": true,
+                  "doc": "Form field or association (e.g., `field={f[:addresses]}`)."
+                },
+                {
+                  "name": ":let",
+                  "type": "any",
+                  "required": true,
+                  "doc": "Binding for the nested form (e.g., `:let={address_form}`)."
+                },
+                {
+                  "name": "for",
+                  "type": "any",
+                  "required": false,
+                  "doc": "Explicit changeset/source for the nested inputs."
+                }
+              ],
+              "slots": [
+                {
+                  "name": "inner_block",
+                  "required": true,
+                  "attributes": []
+                }
+              ]
+            }
+          ]
+        ],
+        [
+          "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
+          [
+            {
+              "name": "icon",
+              "moduleName": "KoveWeb.CoreComponents",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
+              "line": 416,
+              "attributes": [
+                {
+                  "name": "class",
+                  "type": "string",
+                  "required": false,
+                  "default": "\"size-4\"",
+                  "rawType": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string",
+                  "required": true,
+                  "rawType": "string"
+                }
+              ],
+              "slots": []
+            },
+            {
+              "name": "list",
+              "moduleName": "KoveWeb.CoreComponents",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
+              "line": 382,
+              "attributes": [],
+              "slots": [
+                {
+                  "name": "item",
+                  "required": true,
+                  "attributes": [
+                    {
+                      "default": null,
+                      "line": 379,
+                      "name": "title",
+                      "type": "string",
+                      "values": null,
+                      "doc": null,
+                      "required": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "table",
+              "moduleName": "KoveWeb.CoreComponents",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
+              "line": 330,
+              "attributes": [
+                {
+                  "name": "row_item",
+                  "type": "any",
+                  "required": false,
+                  "default": "{:&, [line: 321, column: 14], [{:/, [line: 321, column: 32], [{{:., [line: 321, column: 23], [{:__aliases__, [last: [line: 321, column: 15], line: 321, column: 15], [:Function]}, :identity]}, [no_parens: true, line: 321, column: 24], []}, 1]}]}",
+                  "doc": "the function for mapping each row before calling the :col and :action slots",
+                  "rawType": "any"
+                },
+                {
+                  "name": "row_click",
+                  "type": "any",
+                  "required": false,
+                  "default": "nil",
+                  "doc": "the function for handling phx-click on each row",
+                  "rawType": "any"
+                },
+                {
+                  "name": "row_id",
+                  "type": "any",
+                  "required": false,
+                  "default": "nil",
+                  "doc": "the function for generating the row id",
+                  "rawType": "any"
+                },
+                {
+                  "name": "rows",
+                  "type": "list",
+                  "required": true,
+                  "rawType": "list"
+                },
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true,
+                  "rawType": "string"
+                }
+              ],
+              "slots": [
+                {
+                  "name": "action",
+                  "required": false,
+                  "doc": "the slot for showing user actions in the last table column",
+                  "attributes": []
+                },
+                {
+                  "name": "col",
+                  "required": true,
+                  "attributes": [
+                    {
+                      "default": null,
+                      "line": 325,
+                      "name": "label",
+                      "type": "string",
+                      "values": null,
+                      "doc": null,
+                      "required": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "header",
+              "moduleName": "KoveWeb.CoreComponents",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
+              "line": 289,
+              "attributes": [],
+              "slots": [
+                {
+                  "name": "actions",
+                  "required": false,
+                  "attributes": []
+                },
+                {
+                  "name": "subtitle",
+                  "required": false,
+                  "attributes": []
+                },
+                {
+                  "name": "inner_block",
+                  "required": true,
+                  "attributes": []
+                }
+              ]
+            },
+            {
+              "name": "input",
+              "moduleName": "KoveWeb.CoreComponents",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
+              "line": 170,
+              "attributes": [
+                {
+                  "name": "rest",
+                  "type": "global",
+                  "required": false,
+                  "rawType": "global"
+                },
+                {
+                  "name": "error_class",
+                  "type": "string",
+                  "required": false,
+                  "default": "nil",
+                  "doc": "the input error class to use over defaults",
+                  "rawType": "string"
+                },
+                {
+                  "name": "class",
+                  "type": "string",
+                  "required": false,
+                  "default": "nil",
+                  "doc": "the input class to use over defaults",
+                  "rawType": "string"
+                },
+                {
+                  "name": "multiple",
+                  "type": "boolean",
+                  "required": false,
+                  "default": "false",
+                  "doc": "the multiple flag for select inputs",
+                  "rawType": "boolean"
+                },
+                {
+                  "name": "options",
+                  "type": "list",
+                  "required": false,
+                  "doc": "the options to pass to Phoenix.HTML.Form.options_for_select/2",
+                  "rawType": "list"
+                },
+                {
+                  "name": "prompt",
+                  "type": "string",
+                  "required": false,
+                  "default": "nil",
+                  "doc": "the prompt for select inputs",
+                  "rawType": "string"
+                },
+                {
+                  "name": "checked",
+                  "type": "boolean",
+                  "required": false,
+                  "doc": "the checked flag for checkbox inputs",
+                  "rawType": "boolean"
+                },
+                {
+                  "name": "errors",
+                  "type": "list",
+                  "required": false,
+                  "default": "[]",
+                  "rawType": "list"
+                },
+                {
+                  "name": "field",
+                  "type": "{:__aliases__, [last: [line: 155, column: 29], line: 155, column: 16], [:Phoenix, :HTML, :FormField]}",
+                  "required": false,
+                  "doc": "a form field struct retrieved from the form, for example: @form[:email]",
+                  "rawType": "{:__aliases__, [last: [line: 155, column: 29], line: 155, column: 16], [:Phoenix, :HTML, :FormField]}"
+                },
+                {
+                  "name": "type",
+                  "type": "string",
+                  "required": false,
+                  "default": "\"text\"",
+                  "rawType": "string"
+                },
+                {
+                  "name": "value",
+                  "type": "any",
+                  "required": false,
+                  "rawType": "any"
+                },
+                {
+                  "name": "label",
+                  "type": "string",
+                  "required": false,
+                  "default": "nil",
+                  "rawType": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "any",
+                  "required": false,
+                  "rawType": "any"
+                },
+                {
+                  "name": "id",
+                  "type": "any",
+                  "required": false,
+                  "default": "nil",
+                  "rawType": "any"
+                }
+              ],
+              "slots": []
+            },
+            {
+              "name": "button",
+              "moduleName": "KoveWeb.CoreComponents",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
+              "line": 96,
+              "attributes": [
+                {
+                  "name": "variant",
+                  "type": "string",
+                  "required": false,
+                  "rawType": "string"
+                },
+                {
+                  "name": "class",
+                  "type": "string",
+                  "required": false,
+                  "rawType": "string"
+                },
+                {
+                  "name": "rest",
+                  "type": "global",
+                  "required": false,
+                  "rawType": "global"
+                }
+              ],
+              "slots": [
+                {
+                  "name": "inner_block",
+                  "required": true,
+                  "attributes": []
+                }
+              ]
+            },
+            {
+              "name": "flash",
+              "moduleName": "KoveWeb.CoreComponents",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex",
+              "line": 50,
+              "attributes": [
+                {
+                  "name": "rest",
+                  "type": "global",
+                  "required": false,
+                  "doc": "the arbitrary HTML attributes to add to the flash container",
+                  "rawType": "global"
+                },
+                {
+                  "name": "kind",
+                  "type": "atom",
+                  "required": false,
+                  "values": [
+                    "info",
+                    "error"
+                  ],
+                  "doc": "used for styling and flash lookup",
+                  "rawType": "atom"
+                },
+                {
+                  "name": "title",
+                  "type": "string",
+                  "required": false,
+                  "default": "nil",
+                  "rawType": "string"
+                },
+                {
+                  "name": "flash",
+                  "type": "map",
+                  "required": false,
+                  "default": "{:%{}, [closing: [line: 43, column: 33], line: 43, column: 31], []}",
+                  "doc": "the map of flash messages to display",
+                  "rawType": "map"
+                },
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": false,
+                  "doc": "the optional id of flash container",
+                  "rawType": "string"
+                }
+              ],
+              "slots": [
+                {
+                  "name": "inner_block",
+                  "required": false,
+                  "doc": "the optional inner block that renders the flash message",
+                  "attributes": []
+                }
+              ]
+            }
+          ]
+        ],
+        [
+          "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/layouts.ex",
+          [
+            {
+              "name": "theme_toggle",
+              "moduleName": "KoveWeb.Layouts",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/layouts.ex",
+              "line": 123,
+              "attributes": [],
+              "slots": []
+            },
+            {
+              "name": "flash_group",
+              "moduleName": "KoveWeb.Layouts",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/layouts.ex",
+              "line": 85,
+              "attributes": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": false,
+                  "default": "\"flash-group\"",
+                  "doc": "the optional id of flash container",
+                  "rawType": "string"
+                },
+                {
+                  "name": "flash",
+                  "type": "map",
+                  "required": true,
+                  "doc": "the map of flash messages",
+                  "rawType": "map"
+                }
+              ],
+              "slots": []
+            },
+            {
+              "name": "app",
+              "moduleName": "KoveWeb.Layouts",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/layouts.ex",
+              "line": 36,
+              "attributes": [
+                {
+                  "name": "current_scope",
+                  "type": "map",
+                  "required": false,
+                  "default": "nil",
+                  "doc": "the current [scope](https://hexdocs.pm/phoenix/scopes.html)",
+                  "rawType": "map"
+                },
+                {
+                  "name": "flash",
+                  "type": "map",
+                  "required": true,
+                  "doc": "the map of flash messages",
+                  "rawType": "map"
+                }
+              ],
+              "slots": [
+                {
+                  "name": "inner_block",
+                  "required": true,
+                  "attributes": []
+                }
+              ]
+            }
+          ]
+        ],
+        [
+          "/home/ph8l/share/kove_usa/kove/mix.exs",
+          []
+        ],
+        [
+          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/error_html.ex",
+          []
+        ],
+        [
+          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html.ex",
+          []
+        ]
+      ],
+      "fileHashes": {
+        "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/core_components.ex": "0f12cf01ecf232c20b02a9e0acdbbec8e902e3f3",
+        "/home/ph8l/share/kove_usa/kove/lib/kove_web/components/layouts.ex": "1e068affb52129557c9b76909cb90473c2ce8ab7",
+        "/home/ph8l/share/kove_usa/kove/mix.exs": "2844b6883d5743cb5d7e071878fe1dc3c3be5193",
+        "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/error_html.ex": "b2e23646135a8d9b4a51fceca0e822c26d21893b",
+        "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html.ex": "09c40480d0bf7d820d37ae5cb5cfc4385cd51ef4"
+      },
+      "workspaceRoot": "/home/ph8l/share/kove_usa"
+    },
+    "schemas": {
+      "schemas": [],
+      "schemasByFile": [],
+      "fileHashes": {},
+      "workspaceRoot": "/home/ph8l/share/kove_usa"
+    },
+    "events": {
+      "events": [
+        [
+          "/home/ph8l/share/kove_usa/kove/mix.exs",
+          []
+        ]
+      ],
+      "fileHashes": {
+        "/home/ph8l/share/kove_usa/kove/mix.exs": "2844b6883d5743cb5d7e071878fe1dc3c3be5193"
+      },
+      "workspaceRoot": "/home/ph8l/share/kove_usa"
+    },
+    "routes": {
+      "routes": [
+        {
+          "path": "/",
+          "verb": "GET",
+          "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/router.ex",
+          "line": 20,
+          "helperBase": "root",
+          "params": [],
+          "isResource": false,
+          "controller": "PageController",
+          "action": "home",
+          "scopePath": "/"
+        }
+      ],
+      "fileHashes": {
+        "/home/ph8l/share/kove_usa/kove/lib/kove_web/router.ex": "1c81a83a1fb5f03f9a14956c50204f7bb8124a43"
+      },
+      "workspaceRoot": "/home/ph8l/share/kove_usa"
+    },
+    "controllers": {
+      "rendersByFile": [
+        [
+          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_controller.ex",
+          [
+            {
+              "controllerModule": "KoveWeb.PageController",
+              "controllerFile": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_controller.ex",
+              "action": "home",
+              "templateName": "home",
+              "assigns": [],
+              "assignsWithTypes": [],
+              "line": 5,
+              "templatePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex"
+            }
+          ]
+        ]
+      ],
+      "templateSummaries": [
+        [
+          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex",
+          {
+            "templatePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex",
+            "assignSources": {},
+            "controllers": [
+              {
+                "controllerModule": "KoveWeb.PageController",
+                "controllerFile": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_controller.ex",
+                "action": "home",
+                "templateName": "home",
+                "assigns": [],
+                "assignsWithTypes": [],
+                "line": 5,
+                "templatePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex"
+              }
+            ]
+          }
+        ]
+      ],
+      "fileHashes": {
+        "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_controller.ex": "29cc3d297ee90afb59c300b497f496894c5f0eb1"
+      },
+      "workspaceRoot": "/home/ph8l/share/kove_usa"
+    },
+    "templates": {
+      "templatesByModule": [
+        [
+          "KoveWeb.PageHTML",
+          [
+            {
+              "moduleName": "KoveWeb.PageHTML",
+              "name": "home",
+              "format": "html",
+              "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex"
+            }
+          ]
+        ]
+      ],
+      "templatesByPath": [
+        [
+          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex",
+          {
+            "moduleName": "KoveWeb.PageHTML",
+            "name": "home",
+            "format": "html",
+            "filePath": "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html/home.html.heex"
+          }
+        ]
+      ],
+      "moduleByFile": [
+        [
+          "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html.ex",
+          "KoveWeb.PageHTML"
+        ]
+      ],
+      "fileHashes": {
+        "/home/ph8l/share/kove_usa/kove/lib/kove_web/controllers/page_html.ex": "09c40480d0bf7d820d37ae5cb5cfc4385cd51ef4"
+      },
+      "workspaceRoot": "/home/ph8l/share/kove_usa"
+    },
+    "liveview": {
+      "liveViews": [],
+      "fileHashes": {},
+      "workspaceRoot": "/home/ph8l/share/kove_usa"
+    }
+  },
+  "fileHashes": {}
+}
