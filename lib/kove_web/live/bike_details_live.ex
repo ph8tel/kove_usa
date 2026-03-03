@@ -463,6 +463,24 @@ defmodule KoveWeb.BikeDetailsLive do
   end
 
   @impl true
+  def handle_info({:chat_retry, _message}, socket) do
+    if socket.assigns.chat_loading do
+      {:noreply, socket}
+    else
+      # Drop the failed assistant message, keeping the original user message in history
+      history = List.delete_at(socket.assigns.chat_messages, -1)
+      assistant_msg = %{role: :assistant, content: "", streaming: true}
+
+      KovyAssistant.send_message(socket.assigns.bike, history)
+
+      {:noreply,
+       socket
+       |> assign(:chat_messages, history ++ [assistant_msg])
+       |> assign(:chat_loading, true)}
+    end
+  end
+
+  @impl true
   def handle_info(:chat_toggle, socket), do: handle_chat_toggle(socket)
 
   # ── Streaming callbacks from KovyAssistant ──
@@ -474,5 +492,11 @@ defmodule KoveWeb.BikeDetailsLive do
   def handle_info({:kovy_done}, socket), do: handle_kovy_done(socket)
 
   @impl true
-  def handle_info({:kovy_error, reason}, socket), do: handle_kovy_error(socket, reason)
+  def handle_info({:kovy_error, error_type, reason}, socket),
+    do: handle_kovy_error(socket, error_type, reason)
+
+  # Backwards compatibility for old error format
+  @impl true
+  def handle_info({:kovy_error, reason}, socket) when is_binary(reason),
+    do: handle_kovy_error(socket, reason)
 end

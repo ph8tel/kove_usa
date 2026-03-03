@@ -21,6 +21,8 @@ defmodule KoveWeb.ChatLive do
   Events bubble up to the parent via `send/2`:
 
     * `{:chat_send, message}`  — user submitted a message
+    * `{:chat_retry, message}` — user retried after a retryable error; parent should drop the
+      failed assistant message and re-dispatch to KovyAssistant with the cleaned history
     * `:chat_toggle`           — user toggled the mobile drawer
 
   The parent relays streaming data back down via:
@@ -67,7 +69,7 @@ defmodule KoveWeb.ChatLive do
               quick_asks={@quick_asks}
               target={@myself}
             />
-            <.message_bubble :for={msg <- @chat_messages} msg={msg} />
+            <.message_bubble :for={msg <- @chat_messages} msg={msg} target={@myself} />
           </div>
 
           <%!-- Chat Input --%>
@@ -134,7 +136,7 @@ defmodule KoveWeb.ChatLive do
             quick_asks={@quick_asks}
             target={@myself}
           />
-          <.message_bubble :for={msg <- @chat_messages} msg={msg} />
+          <.message_bubble :for={msg <- @chat_messages} msg={msg} target={@myself} />
         </div>
 
         <%!-- Mobile Chat Input --%>
@@ -180,6 +182,7 @@ defmodule KoveWeb.ChatLive do
   end
 
   attr :msg, :map, required: true
+  attr :target, :any, required: true
 
   defp message_bubble(assigns) do
     ~H"""
@@ -193,9 +196,23 @@ defmodule KoveWeb.ChatLive do
           do: "bg-primary text-primary-content",
           else: "bg-base-300 text-base-content"
         ),
-        if(Map.get(@msg, :error), do: "border border-error", else: "")
+        if(Map.get(@msg, :error), do: "border-2 border-error bg-error/10 text-error", else: "")
       ]}>
         <p class="text-sm whitespace-pre-wrap">{@msg.content}</p>
+
+        <%!-- Show retry button for retryable errors --%>
+        <button
+          :if={
+            Map.get(@msg, :error) &&
+              Map.get(@msg, :error_type) in [:timeout, :connection, :retry_exhausted]
+          }
+          phx-click="retry_message"
+          phx-target={@target}
+          class="text-xs mt-2 link link-error underline"
+        >
+          Try again
+        </button>
+
         <span
           :if={Map.get(@msg, :streaming) && @msg.content == ""}
           class="loading loading-dots loading-xs"
@@ -245,6 +262,20 @@ defmodule KoveWeb.ChatLive do
   @impl true
   def handle_event("toggle_chat", _params, socket) do
     send(self(), :chat_toggle)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("retry_message", _params, socket) do
+    last_user_msg =
+      socket.assigns.chat_messages
+      |> Enum.reverse()
+      |> Enum.find(&(&1.role == :user))
+
+    if last_user_msg do
+      send(self(), {:chat_retry, last_user_msg.content})
+    end
+
     {:noreply, socket}
   end
 end

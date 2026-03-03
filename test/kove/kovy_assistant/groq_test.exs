@@ -27,7 +27,8 @@ defmodule Kove.KovyAssistant.GroqTest do
       result = Groq.stream_chat([%{"role" => "user", "content" => "hi"}], self())
 
       assert result == :error
-      assert_receive {:kovy_error, reason}
+      assert_receive {:kovy_error, error_type, reason}
+      assert error_type == :auth_failed
       assert reason =~ "GROQ_API_KEY not configured"
 
       # Restore

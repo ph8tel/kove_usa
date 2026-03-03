@@ -93,26 +93,64 @@ defmodule KoveWeb.Live.ChatHandlers do
   @doc """
   Handles errors from the Groq streaming API.
 
-  Updates the last message with the error reason and marks it as an error.
+  Accepts either a categorized error tuple `{error_type, message}` or a plain string
+  for backwards compatibility. Marks the message as an error and stops loading.
 
   ## Examples
+
+      def handle_info({:kovy_error, error_type, reason}, socket) do
+        handle_kovy_error(socket, error_type, reason)
+      end
 
       def handle_info({:kovy_error, reason}, socket) do
         handle_kovy_error(socket, reason)
       end
   """
-  def handle_kovy_error(socket, reason) do
+  def handle_kovy_error(socket, error_type, original_message) when is_atom(error_type) do
+    user_message =
+      case error_type do
+        :rate_limited ->
+          "⏱️ Kovy is temporarily busy. Wait 30 seconds and try again."
+
+        :auth_failed ->
+          "🔐 Authentication issue. Please contact support."
+
+        :timeout ->
+          "⏳ Request timed out. Try asking a simpler question."
+
+        :connection ->
+          "📡 Connection lost. Check your internet and try again."
+
+        :server_error ->
+          "🔧 Groq's servers are having issues. Please try again shortly."
+
+        :retry_exhausted ->
+          "Couldn't connect to Kovy after multiple attempts. Please try again."
+
+        :internal_error ->
+          "Kovy encountered an internal error. Please try again."
+
+        _ ->
+          original_message
+      end
+
     messages =
       List.update_at(socket.assigns.chat_messages, -1, fn msg ->
         msg
-        |> Map.put(:content, reason)
+        |> Map.put(:content, user_message)
         |> Map.put(:streaming, false)
         |> Map.put(:error, true)
+        |> Map.put(:error_type, error_type)
       end)
 
     {:noreply,
      socket
      |> assign(:chat_messages, messages)
      |> assign(:chat_loading, false)}
+  end
+
+  # Backwards compatibility for raw string errors
+  def handle_kovy_error(socket, error_message) when is_binary(error_message) do
+    handle_kovy_error(socket, :unknown, error_message)
   end
 end
