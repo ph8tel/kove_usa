@@ -7,12 +7,14 @@ defmodule Kove.KovyAssistant.Groq do
 
     * `{:kovy_chunk, text}`  — a token fragment
     * `{:kovy_done}`         — stream finished
-    * `{:kovy_error, reason}` — something went wrong
+    * `{:kovy_error, error_type, message}` — categorized error occurred
   """
 
   @behaviour Kove.KovyAssistant.GroqBehaviour
 
   require Logger
+
+  alias Kove.KovyAssistant.GroqError
 
   @groq_url "https://api.groq.com/openai/v1/chat/completions"
   @default_model "llama-3.3-70b-versatile"
@@ -30,7 +32,7 @@ defmodule Kove.KovyAssistant.Groq do
   @doc """
   Streams a chat completion from Groq.
 
-  Sends `{:kovy_chunk, text}`, `{:kovy_done}`, or `{:kovy_error, reason}`
+  Sends `{:kovy_chunk, text}`, `{:kovy_done}`, or `{:kovy_error, error_type, message}`
   messages to `caller_pid`.
   """
   @impl true
@@ -39,7 +41,8 @@ defmodule Kove.KovyAssistant.Groq do
       nil ->
         send(
           caller_pid,
-          {:kovy_error, "GROQ_API_KEY not configured. Set the environment variable and restart."}
+          {:kovy_error, :auth_failed,
+           "GROQ_API_KEY not configured. Set the environment variable and restart."}
         )
 
         :error
@@ -65,6 +68,8 @@ defmodule Kove.KovyAssistant.Groq do
   # ── Streaming ────────────────────────────────────────────────────────
 
   defp do_stream(messages, api_key, caller_pid) do
+    request_id = generate_request_id()
+
     body =
       Jason.encode!(%{
         "model" => @default_model,
@@ -79,7 +84,11 @@ defmodule Kove.KovyAssistant.Groq do
       {"content-type", "application/json"}
     ]
 
-    Logger.info("Groq: starting streaming request to #{@default_model}")
+    Logger.info("Groq stream START",
+      request_id: request_id,
+      message_count: length(messages),
+      caller: inspect(caller_pid)
+    )
 
     # We buffer partial SSE lines across chunks in the process dictionary.
     Process.put(:sse_buffer, "")
@@ -111,32 +120,42 @@ defmodule Kove.KovyAssistant.Groq do
         )
 
       chunk_count = Process.get(:sse_chunk_count, 0)
-      Logger.info("Groq: stream finished — status=#{resp.status}, chunks=#{chunk_count}")
 
       if resp.status == 200 do
+        Logger.info("Groq stream SUCCESS",
+          request_id: request_id,
+          chunks_received: chunk_count
+        )
+
         send(caller_pid, {:kovy_done})
       else
         # Non-200: the into callback received error JSON, not SSE.
-        # Try to extract the error message from the response.
-        error_body =
-          case resp.body do
-            %{"error" => %{"message" => msg}} -> msg
-            body when is_binary(body) -> body
-            other -> inspect(other)
-          end
+        # Categorize and send structured error.
+        error = GroqError.from_http_response(resp.status, resp.body)
 
-        Logger.error("Groq API error (#{resp.status}): #{error_body}")
-        send(caller_pid, {:kovy_error, "Groq API error: #{error_body}"})
+        Logger.error("Groq stream FAILED",
+          request_id: request_id,
+          error_type: error.type,
+          status: error.status,
+          message: error.message
+        )
+
+        send(caller_pid, {:kovy_error, error.type, GroqError.message(error)})
       end
 
       :ok
     rescue
       e ->
-        Logger.error("Groq streaming error: #{Exception.message(e)}")
+        Logger.error("Groq stream CRASHED",
+          request_id: request_id,
+          error: Exception.message(e),
+          stacktrace: Exception.format_stacktrace(__STACKTRACE__)
+        )
 
         send(
           caller_pid,
-          {:kovy_error, "Something went wrong reaching Kovy's brain. Please try again."}
+          {:kovy_error, :internal_error,
+           GroqError.message(%GroqError{type: :internal_error, message: Exception.message(e)})}
         )
 
         :error
@@ -146,6 +165,13 @@ defmodule Kove.KovyAssistant.Groq do
   # ── Synchronous ──────────────────────────────────────────────────────
 
   defp do_sync(messages, api_key) do
+    request_id = generate_request_id()
+
+    Logger.info("Groq sync START",
+      request_id: request_id,
+      message_count: length(messages)
+    )
+
     body =
       Jason.encode!(%{
         "model" => @default_model,
@@ -163,15 +189,34 @@ defmodule Kove.KovyAssistant.Groq do
     case Req.post(@groq_url, headers: headers, body: body) do
       {:ok, %{status: 200, body: body}} ->
         content = get_in(body, ["choices", Access.at(0), "message", "content"])
+
+        Logger.info("Groq sync SUCCESS",
+          request_id: request_id,
+          content_length: byte_size(content || "")
+        )
+
         {:ok, content || ""}
 
       {:ok, %{status: status, body: body}} ->
-        Logger.error("Groq API returned #{status}: #{inspect(body)}")
-        {:error, "API error (#{status})"}
+        error = GroqError.from_http_response(status, body)
+
+        Logger.error("Groq sync FAILED",
+          request_id: request_id,
+          error_type: error.type,
+          status: status,
+          message: error.message
+        )
+
+        {:error, error.type, GroqError.message(error)}
 
       {:error, reason} ->
-        Logger.error("Groq API request failed: #{inspect(reason)}")
-        {:error, "Request failed"}
+        Logger.error("Groq sync request FAILED",
+          request_id: request_id,
+          error: inspect(reason)
+        )
+
+        {:error, :connection,
+         GroqError.message(%GroqError{type: :connection, message: inspect(reason)})}
     end
   end
 
@@ -201,4 +246,9 @@ defmodule Kove.KovyAssistant.Groq do
   end
 
   defp parse_sse_line(_), do: :skip
+
+  # Generate a unique request ID for logging/tracing
+  defp generate_request_id do
+    :crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)
+  end
 end

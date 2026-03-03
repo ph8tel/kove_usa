@@ -219,4 +219,141 @@ defmodule KoveWeb.StorefrontLiveChatTest do
       assert html =~ "Ask about any Kove bike..."
     end
   end
+
+  describe "retry_message" do
+    test "retry button appears for retryable error types", %{conn: conn} do
+      Kove.KovyAssistant.GroqMock
+      |> stub(:api_key_available?, fn -> true end)
+      |> stub(:stream_chat, fn _messages, _pid -> :ok end)
+
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      view
+      |> form("#kovy-chat-form", %{message: "Hello"})
+      |> render_submit()
+
+      render(view)
+
+      for error_type <- [:timeout, :connection, :retry_exhausted] do
+        send(view.pid, {:kovy_error, error_type, "Some error"})
+        html = render(view)
+
+        assert html =~ "Try again",
+               "expected retry button for error_type=#{error_type}"
+
+        assert has_element?(view, "button[phx-click='retry_message']"),
+               "expected retry button element for error_type=#{error_type}"
+      end
+    end
+
+    test "retry button does not appear for non-retryable errors", %{conn: conn} do
+      Kove.KovyAssistant.GroqMock
+      |> stub(:api_key_available?, fn -> true end)
+      |> stub(:stream_chat, fn _messages, _pid -> :ok end)
+
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      view
+      |> form("#kovy-chat-form", %{message: "Hello"})
+      |> render_submit()
+
+      render(view)
+
+      for error_type <- [:auth_failed, :rate_limited, :invalid_request, :server_error, :unknown] do
+        send(view.pid, {:kovy_error, error_type, "Some error"})
+        html = render(view)
+
+        refute html =~ "Try again",
+               "expected NO retry button for error_type=#{error_type}"
+      end
+    end
+
+    test "clicking retry clears the error and shows streaming bubble", %{conn: conn} do
+      Kove.KovyAssistant.GroqMock
+      |> stub(:api_key_available?, fn -> true end)
+      |> stub(:stream_chat, fn _messages, _pid -> :ok end)
+
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      view
+      |> form("#kovy-chat-form", %{message: "Best beginner bike?"})
+      |> render_submit()
+
+      render(view)
+
+      send(view.pid, {:kovy_error, :timeout, "⏳ Request timed out."})
+      html = render(view)
+
+      assert html =~ "Try again"
+
+      view
+      |> element("#kovy-chat-messages button[phx-click='retry_message']")
+      |> render_click()
+
+      render(view)
+      html = render(view)
+
+      refute html =~ "⏳ Request timed out."
+      refute html =~ "Try again"
+      assert html =~ "Kovy is thinking"
+    end
+
+    test "retry re-sends the original user message to KovyAssistant", %{conn: conn} do
+      test_pid = self()
+      call_count = :counters.new(1, [])
+
+      Kove.KovyAssistant.GroqMock
+      |> stub(:api_key_available?, fn -> true end)
+      |> stub(:stream_chat, fn _messages, pid ->
+        :counters.add(call_count, 1, 1)
+        send(test_pid, {:groq_called, :counters.get(call_count, 1)})
+        send(pid, {:kovy_done})
+        :ok
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      view
+      |> form("#kovy-chat-form", %{message: "Which bike is best for off-road?"})
+      |> render_submit()
+
+      render(view)
+      assert_receive {:groq_called, 1}, 2_000
+
+      send(view.pid, {:kovy_error, :connection, "📡 Connection lost."})
+      render(view)
+
+      view
+      |> element("#kovy-chat-messages button[phx-click='retry_message']")
+      |> render_click()
+
+      render(view)
+      assert_receive {:groq_called, 2}, 2_000
+
+      send(view.pid, {:kovy_chunk, "The 450 Rally is best for off-road."})
+      send(view.pid, {:kovy_done})
+      html = render(view)
+
+      assert html =~ "Which bike is best for off-road?"
+      assert html =~ "The 450 Rally is best for off-road."
+    end
+
+    test "retry does not double-fire when already loading", %{conn: conn} do
+      Kove.KovyAssistant.GroqMock
+      |> stub(:api_key_available?, fn -> true end)
+      |> stub(:stream_chat, fn _messages, _pid -> :ok end)
+
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      view
+      |> form("#kovy-chat-form", %{message: "Hello"})
+      |> render_submit()
+
+      # Directly send the retry message while loading is true
+      send(view.pid, {:chat_retry, "Hello"})
+      html = render(view)
+
+      assert html =~ "Kovy is thinking"
+    end
+  end
 end

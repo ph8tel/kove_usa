@@ -61,7 +61,10 @@ defmodule KoveWeb.StorefrontLive do
           placeholder="Ask about any Kove bike..."
           quick_asks={[
             %{label: "Best for beginners?", message: "Which Kove bike is best for a beginner?"},
-            %{label: "Compare models", message: "Compare the 450 rally street legal and 450 Rally Pro Off-road"},
+            %{
+              label: "Compare models",
+              message: "Compare the 450 rally street legal and 450 Rally Pro Off-road"
+            },
             %{label: "Off-road pick?", message: "What's the best Kove for off-road riding?"}
           ]}
         />
@@ -181,6 +184,28 @@ defmodule KoveWeb.StorefrontLive do
   end
 
   @impl true
+  def handle_info({:chat_retry, _message}, socket) do
+    if socket.assigns.chat_loading do
+      {:noreply, socket}
+    else
+      # Drop the failed assistant message, keeping the original user message in history
+      history =
+        case socket.assigns.chat_messages do
+          [] -> []
+          msgs -> List.delete_at(msgs, -1)
+        end
+      assistant_msg = %{role: :assistant, content: "", streaming: true}
+
+      KovyAssistant.send_catalog_message(socket.assigns.bikes_full, history)
+
+      {:noreply,
+       socket
+       |> assign(:chat_messages, history ++ [assistant_msg])
+       |> assign(:chat_loading, true)}
+    end
+  end
+
+  @impl true
   def handle_info(:chat_toggle, socket), do: handle_chat_toggle(socket)
 
   @impl true
@@ -190,5 +215,11 @@ defmodule KoveWeb.StorefrontLive do
   def handle_info({:kovy_done}, socket), do: handle_kovy_done(socket)
 
   @impl true
-  def handle_info({:kovy_error, reason}, socket), do: handle_kovy_error(socket, reason)
+  def handle_info({:kovy_error, error_type, reason}, socket),
+    do: handle_kovy_error(socket, error_type, reason)
+
+  # Backwards compatibility for old error format
+  @impl true
+  def handle_info({:kovy_error, reason}, socket) when is_binary(reason),
+    do: handle_kovy_error(socket, reason)
 end

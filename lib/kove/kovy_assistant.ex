@@ -4,13 +4,20 @@ defmodule Kove.KovyAssistant do
 
   Receives chat requests from LiveViews, builds structured prompts with
   full bike context, and streams Groq responses back to the caller.
+
+  Spawned tasks wrap streaming calls with error handling and retry logic
+  for transient failures.
   """
 
   use GenServer
 
   alias Kove.KovyAssistant.Prompt
+  alias Kove.KovyAssistant.GroqError
 
   require Logger
+
+  @max_retries 3
+  @retry_backoff_base_ms 1000
 
   defp groq_module do
     Application.get_env(:kove, :groq_module, Kove.KovyAssistant.Groq)
@@ -60,28 +67,47 @@ defmodule Kove.KovyAssistant do
 
   @impl true
   def handle_cast({:send_message, bike, chat_history, caller_pid}, state) do
-    Logger.info(
-      "KovyAssistant: starting chat for #{bike.name}, history=#{length(chat_history)} msgs, caller=#{inspect(caller_pid)}"
+    Logger.info("KovyAssistant: starting chat for bike",
+      bike: bike.name,
+      history_length: length(chat_history),
+      caller: inspect(caller_pid)
     )
 
     Task.Supervisor.start_child(Kove.TaskSupervisor, fn ->
-      groq = groq_module()
-      Logger.info("KovyAssistant task: building prompt for #{bike.name}")
-      system_prompt = Prompt.build_system_prompt(bike)
+      try do
+        groq = groq_module()
+        Logger.info("KovyAssistant task: building prompt", bike: bike.name)
+        system_prompt = Prompt.build_system_prompt(bike)
 
-      api_messages =
-        [
-          %{"role" => "system", "content" => system_prompt}
-          | Enum.map(chat_history, fn msg ->
-              %{"role" => to_string(msg.role), "content" => msg.content}
-            end)
-        ]
+        api_messages =
+          [
+            %{"role" => "system", "content" => system_prompt}
+            | Enum.map(chat_history, fn msg ->
+                %{"role" => to_string(msg.role), "content" => msg.content}
+              end)
+          ]
 
-      Logger.info(
-        "KovyAssistant task: sending #{length(api_messages)} messages to Groq (key=#{if groq.api_key_available?(), do: "SET", else: "MISSING"})"
-      )
+        Logger.info("KovyAssistant task: streaming to Groq",
+          bike: bike.name,
+          message_count: length(api_messages),
+          api_key_configured: groq.api_key_available?()
+        )
 
-      groq.stream_chat(api_messages, caller_pid)
+        stream_with_retry(api_messages, caller_pid, 1)
+      rescue
+        e ->
+          Logger.error("KovyAssistant task crashed",
+            bike: bike.name,
+            error: Exception.message(e),
+            stacktrace: Exception.format_stacktrace(__STACKTRACE__)
+          )
+
+          send(
+            caller_pid,
+            {:kovy_error, :internal_error,
+             GroqError.message(%GroqError{type: :internal_error, message: Exception.message(e)})}
+          )
+      end
     end)
 
     {:noreply, state}
@@ -89,38 +115,95 @@ defmodule Kove.KovyAssistant do
 
   @impl true
   def handle_cast({:send_catalog_message, bikes, chat_history, caller_pid}, state) do
-    Logger.info(
-      "KovyAssistant: starting catalog chat, #{length(bikes)} bikes, history=#{length(chat_history)} msgs"
+    Logger.info("KovyAssistant: starting catalog chat",
+      bike_count: length(bikes),
+      history_length: length(chat_history),
+      caller: inspect(caller_pid)
     )
 
     Task.Supervisor.start_child(Kove.TaskSupervisor, fn ->
-      groq = groq_module()
+      try do
+        groq = groq_module()
 
-      # Extract latest user message for keyword matching (pseudo-RAG)
-      last_user_message =
-        chat_history
-        |> Enum.reverse()
-        |> Enum.find(fn msg -> msg.role == :user end)
-        |> case do
-          nil -> ""
-          msg -> msg.content
-        end
+        # Extract latest user message for keyword matching (pseudo-RAG)
+        last_user_message =
+          chat_history
+          |> Enum.reverse()
+          |> Enum.find(fn msg -> msg.role == :user end)
+          |> case do
+            nil -> ""
+            msg -> msg.content
+          end
 
-      system_prompt = Prompt.build_catalog_system_prompt(bikes, last_user_message)
+        system_prompt = Prompt.build_catalog_system_prompt(bikes, last_user_message)
 
-      api_messages =
-        [
-          %{"role" => "system", "content" => system_prompt}
-          | Enum.map(chat_history, fn msg ->
-              %{"role" => to_string(msg.role), "content" => msg.content}
-            end)
-        ]
+        api_messages =
+          [
+            %{"role" => "system", "content" => system_prompt}
+            | Enum.map(chat_history, fn msg ->
+                %{"role" => to_string(msg.role), "content" => msg.content}
+              end)
+          ]
 
-      Logger.info("KovyAssistant task: sending #{length(api_messages)} catalog messages to Groq")
+        Logger.info("KovyAssistant task: streaming catalog to Groq",
+          message_count: length(api_messages),
+          api_key_configured: groq.api_key_available?()
+        )
 
-      groq.stream_chat(api_messages, caller_pid)
+        stream_with_retry(api_messages, caller_pid, 1)
+      rescue
+        e ->
+          Logger.error("KovyAssistant catalog task crashed",
+            error: Exception.message(e),
+            stacktrace: Exception.format_stacktrace(__STACKTRACE__)
+          )
+
+          send(
+            caller_pid,
+            {:kovy_error, :internal_error,
+             GroqError.message(%GroqError{type: :internal_error, message: Exception.message(e)})}
+          )
+      end
     end)
 
     {:noreply, state}
+  end
+
+  # ── Retry logic ──────────────────────────────────────────────────────
+
+  # Stream with exponential backoff retry for transient failures
+  defp stream_with_retry(messages, caller_pid, attempt) when attempt <= @max_retries do
+    groq = groq_module()
+
+    case groq.stream_chat(messages, caller_pid) do
+      :ok ->
+        :ok
+
+      :error when attempt < @max_retries ->
+        backoff_ms = Integer.pow(2, attempt) * @retry_backoff_base_ms
+
+        Logger.info("Groq stream failed, retrying",
+          attempt: attempt,
+          max_retries: @max_retries,
+          backoff_ms: backoff_ms
+        )
+
+        Process.sleep(backoff_ms)
+        stream_with_retry(messages, caller_pid, attempt + 1)
+
+      :error ->
+        Logger.error("Groq stream failed after retries",
+          attempts: attempt,
+          max_retries: @max_retries
+        )
+
+        send(
+          caller_pid,
+          {:kovy_error, :retry_exhausted,
+           GroqError.message(%GroqError{type: :retry_exhausted, message: ""})}
+        )
+
+        :error
+    end
   end
 end
