@@ -35,7 +35,11 @@ defmodule KoveWeb.StorefrontLive do
             KOVE MOTO <span class="text-primary">USA</span>
           </h1>
           <p class="mt-4 text-lg text-base-content/60 max-w-2xl mx-auto">
-            Touch the Dream
+            Demo of AI chat assistant for Gary Goodwin
+          </p>
+
+          <p class="mt-4 text-lg text-base-content/60 max-w-2xl mx-auto md:hidden">
+            Click the chat icon and ask about specific bikes, comparisons, maintenance, specs, or anything else you want to know!
           </p>
         </section>
 
@@ -57,7 +61,7 @@ defmodule KoveWeb.StorefrontLive do
           placeholder="Ask about any Kove bike..."
           quick_asks={[
             %{label: "Best for beginners?", message: "Which Kove bike is best for a beginner?"},
-            %{label: "Compare models", message: "Compare the 800X and 450 Rally"},
+            %{label: "Compare models", message: "Compare the 450 rally street legal and 450 Rally Pro Off-road"},
             %{label: "Off-road pick?", message: "What's the best Kove for off-road riding?"}
           ]}
         />
