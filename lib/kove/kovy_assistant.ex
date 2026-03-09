@@ -12,6 +12,7 @@ defmodule Kove.KovyAssistant do
   use GenServer
 
   alias Kove.KovyAssistant.Prompt
+  alias Kove.KovyAssistant.InputSanitizer
   alias Kove.KovyAssistant.GroqError
 
   require Logger
@@ -77,12 +78,13 @@ defmodule Kove.KovyAssistant do
       try do
         groq = groq_module()
         Logger.info("KovyAssistant task: building prompt", bike: bike.name)
+        clean_history = InputSanitizer.sanitize_history(chat_history)
         system_prompt = Prompt.build_system_prompt(bike)
 
         api_messages =
           [
             %{"role" => "system", "content" => system_prompt}
-            | Enum.map(chat_history, fn msg ->
+            | Enum.map(clean_history, fn msg ->
                 %{"role" => to_string(msg.role), "content" => msg.content}
               end)
           ]
@@ -124,15 +126,17 @@ defmodule Kove.KovyAssistant do
     Task.Supervisor.start_child(Kove.TaskSupervisor, fn ->
       try do
         groq = groq_module()
+        clean_history = InputSanitizer.sanitize_history(chat_history)
 
-        # Extract latest user message for keyword matching (pseudo-RAG)
+        # Extract latest user message for keyword matching (pseudo-RAG).
+        # Use the sanitized query variant — no injection patterns, length-bounded.
         last_user_message =
-          chat_history
+          clean_history
           |> Enum.reverse()
           |> Enum.find(fn msg -> msg.role == :user end)
           |> case do
             nil -> ""
-            msg -> msg.content
+            msg -> InputSanitizer.sanitize_query(msg.content)
           end
 
         system_prompt = Prompt.build_catalog_system_prompt(bikes, last_user_message)
@@ -140,7 +144,7 @@ defmodule Kove.KovyAssistant do
         api_messages =
           [
             %{"role" => "system", "content" => system_prompt}
-            | Enum.map(chat_history, fn msg ->
+            | Enum.map(clean_history, fn msg ->
                 %{"role" => to_string(msg.role), "content" => msg.content}
               end)
           ]
