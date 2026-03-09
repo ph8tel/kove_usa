@@ -12,9 +12,24 @@ defmodule Kove.Release do
 
   def migrate do
     load_app()
+    migrate_with_retry(repos(), 3)
+  end
 
-    for repo <- repos() do
+  defp migrate_with_retry([], _retries), do: :ok
+
+  defp migrate_with_retry([repo | rest], retries) do
+    try do
       {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      migrate_with_retry(rest, retries)
+    rescue
+      e in [DBConnection.ConnectionError, Postgrex.Error] ->
+        if retries > 0 do
+          IO.puts("DB not ready (#{Exception.message(e)}), retrying in 8s… (#{retries} left)")
+          Process.sleep(8_000)
+          migrate_with_retry([repo | rest], retries - 1)
+        else
+          reraise e, __STACKTRACE__
+        end
     end
   end
 
