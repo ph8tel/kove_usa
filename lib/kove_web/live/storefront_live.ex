@@ -194,6 +194,7 @@ defmodule KoveWeb.StorefrontLive do
           [] -> []
           msgs -> List.delete_at(msgs, -1)
         end
+
       assistant_msg = %{role: :assistant, content: "", streaming: true}
 
       KovyAssistant.send_catalog_message(socket.assigns.bikes_full, history)
