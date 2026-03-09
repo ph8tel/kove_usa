@@ -16,6 +16,12 @@ defmodule KoveWeb.BikeDetailsLive do
       bike ->
         sorted_images = Enum.sort_by(bike.images, & &1.position)
 
+        rate_limit_key =
+          case get_connect_info(socket, :peer_data) do
+            %{address: addr} -> {:ip, :inet.ntoa(addr) |> to_string()}
+            _ -> nil
+          end
+
         {:ok,
          socket
          |> assign(:page_title, bike.name)
@@ -23,6 +29,7 @@ defmodule KoveWeb.BikeDetailsLive do
          |> assign(:sorted_images, sorted_images)
          |> assign(:current_image_index, 0)
          |> assign(:active_tab, :marketing)
+         |> assign(:rate_limit_key, rate_limit_key)
          |> assign(:chat_messages, [])
          |> assign(:chat_loading, false)
          |> assign(:chat_open, false)}
@@ -452,7 +459,12 @@ defmodule KoveWeb.BikeDetailsLive do
 
       history = socket.assigns.chat_messages ++ [user_msg]
 
-      KovyAssistant.send_message(socket.assigns.bike, history)
+      context = %{
+        tier: :public,
+        rate_limit_key: socket.assigns.rate_limit_key
+      }
+
+      KovyAssistant.send_message(socket.assigns.bike, history, self(), context)
 
       {:noreply,
        socket
@@ -471,7 +483,12 @@ defmodule KoveWeb.BikeDetailsLive do
       history = List.delete_at(socket.assigns.chat_messages, -1)
       assistant_msg = %{role: :assistant, content: "", streaming: true}
 
-      KovyAssistant.send_message(socket.assigns.bike, history)
+      context = %{
+        tier: :public,
+        rate_limit_key: socket.assigns.rate_limit_key
+      }
+
+      KovyAssistant.send_message(socket.assigns.bike, history, self(), context)
 
       {:noreply,
        socket
