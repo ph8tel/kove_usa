@@ -28,11 +28,14 @@ defmodule Kove.KovyAssistant.EmbeddingsTest do
       Req.Test.stub(:groq_embed, fn conn ->
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.send_resp(200, Jason.encode!(%{
-          "data" => [%{"embedding" => @sample_floats, "index" => 0}],
-          "model" => "nomic-embed-text-v1.5",
-          "usage" => %{"prompt_tokens" => 5, "total_tokens" => 5}
-        }))
+        |> Plug.Conn.send_resp(
+          200,
+          Jason.encode!(%{
+            "data" => [%{"embedding" => @sample_floats, "index" => 0}],
+            "model" => "nomic-embed-text-v1.5",
+            "usage" => %{"prompt_tokens" => 5, "total_tokens" => 5}
+          })
+        )
       end)
 
       # Ensure a fake key is present

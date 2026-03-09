@@ -188,15 +188,22 @@ defmodule Kove.KovyAssistant do
                 nil
 
               {:error, kind, msg} ->
-                Logger.warning("KovyAssistant: embedding search failed (#{kind}: #{msg}), using keyword fallback")
+                Logger.warning(
+                  "KovyAssistant: embedding search failed (#{kind}: #{msg}), using keyword fallback"
+                )
+
                 nil
 
               {:error, kind} ->
-                Logger.warning("KovyAssistant: embedding search failed (#{kind}), using keyword fallback")
+                Logger.warning(
+                  "KovyAssistant: embedding search failed (#{kind}), using keyword fallback"
+                )
+
                 nil
             end
 
-          system_prompt = Prompt.build_catalog_system_prompt(bikes, last_user_message, relevant_ids)
+          system_prompt =
+            Prompt.build_catalog_system_prompt(bikes, last_user_message, relevant_ids)
 
           api_messages =
             [

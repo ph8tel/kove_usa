@@ -72,9 +72,7 @@ defmodule Mix.Tasks.Kove.EmbedDescriptions do
               Mix.raise("GROQ_API_KEY is not set. Cannot generate embeddings.")
 
             {:error, kind, message} ->
-              Mix.shell().error(
-                "  [#{batch_num}] ✗ description #{desc.id}: #{kind} — #{message}"
-              )
+              Mix.shell().error("  [#{batch_num}] ✗ description #{desc.id}: #{kind} — #{message}")
 
             {:error, kind} ->
               Mix.shell().error("  [#{batch_num}] ✗ description #{desc.id}: #{kind}")
