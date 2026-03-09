@@ -298,6 +298,61 @@ defmodule Kove.KovyAssistant.PromptTest do
       assert prompt =~ "terrain"
       assert prompt =~ "budget"
     end
+
+    test "uses relevant_bike_ids list when provided, bypassing keyword matching" do
+      bike_a =
+        build_bike(%{id: 1, name: "2026 Kove 800X Pro", slug: "2026-kove-800x-pro"})
+
+      bike_b =
+        build_bike(%{
+          id: 2,
+          name: "2026 Kove 450 Rally",
+          slug: "2026-kove-450-rally",
+          category: :rally
+        })
+
+      # Pass bike_b's id — even though "800X" appears in the message,
+      # the explicit ids list takes priority.
+      prompt =
+        Prompt.build_catalog_system_prompt(
+          [bike_a, bike_b],
+          "tell me about the 800X",
+          [2]
+        )
+
+      assert prompt =~ "DETAILED SPECS FOR RELEVANT BIKES"
+      assert prompt =~ "2026 Kove 450 Rally"
+      # The 800X should NOT have detailed specs since it wasn't in relevant_ids
+      refute prompt =~ "Model: 2026 Kove 800X Pro\n"
+    end
+
+    test "falls back to keyword matching when relevant_bike_ids is nil" do
+      bike_a =
+        build_bike(%{id: 1, name: "2026 Kove 800X Pro", slug: "2026-kove-800x-pro"})
+
+      bike_b =
+        build_bike(%{
+          id: 2,
+          name: "2026 Kove 450 Rally",
+          slug: "2026-kove-450-rally",
+          category: :rally
+        })
+
+      # nil → keyword matching, "800X" should match bike_a
+      prompt = Prompt.build_catalog_system_prompt([bike_a, bike_b], "tell me about the 800X", nil)
+
+      assert prompt =~ "2026 Kove 800X Pro"
+      assert prompt =~ "DETAILED SPECS FOR RELEVANT BIKES"
+    end
+
+    test "falls back to keyword matching when relevant_bike_ids is empty" do
+      bike = build_bike(%{id: 1, name: "2026 Kove 800X Pro", slug: "2026-kove-800x-pro"})
+
+      # [] → keyword matching
+      prompt = Prompt.build_catalog_system_prompt([bike], "tell me about the 800X", [])
+
+      assert prompt =~ "DETAILED SPECS FOR RELEVANT BIKES"
+    end
   end
 
   describe "relevant_bikes/2" do

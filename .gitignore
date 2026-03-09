@@ -59,3 +59,7 @@ cover/
 # Local environment
 .tool-versions
 .vscode/.phoenix-pulse-cache.json
+
+# Local AI/agent extension artifacts
+.agents/
+skills-lock.json

@@ -15,6 +15,7 @@ defmodule Kove.KovyAssistant do
   alias Kove.KovyAssistant.InputSanitizer
   alias Kove.KovyAssistant.ContextBuilder
   alias Kove.KovyAssistant.RateLimiter
+  alias Kove.KovyAssistant.Embeddings
   alias Kove.KovyAssistant.GroqError
 
   require Logger
@@ -169,7 +170,40 @@ defmodule Kove.KovyAssistant do
               msg -> InputSanitizer.sanitize_query(msg.content)
             end
 
-          system_prompt = Prompt.build_catalog_system_prompt(bikes, last_user_message)
+          # Vector similarity search — finds bikes whose descriptions are
+          # semantically closest to the user query. Falls back to keyword
+          # matching inside build_catalog_system_prompt when embeddings are
+          # unavailable (no API key, not yet populated, or transient error).
+          relevant_ids =
+            case Embeddings.find_relevant_bike_ids(last_user_message) do
+              {:ok, ids} when ids != [] ->
+                Logger.info("KovyAssistant: embedding search matched #{length(ids)} bike(s)")
+                ids
+
+              {:ok, []} ->
+                Logger.info("KovyAssistant: embedding search empty, using keyword fallback")
+                nil
+
+              {:error, :no_api_key} ->
+                nil
+
+              {:error, kind, msg} ->
+                Logger.warning(
+                  "KovyAssistant: embedding search failed (#{kind}: #{msg}), using keyword fallback"
+                )
+
+                nil
+
+              {:error, kind} ->
+                Logger.warning(
+                  "KovyAssistant: embedding search failed (#{kind}), using keyword fallback"
+                )
+
+                nil
+            end
+
+          system_prompt =
+            Prompt.build_catalog_system_prompt(bikes, last_user_message, relevant_ids)
 
           api_messages =
             [

@@ -60,11 +60,25 @@ defmodule Kove.KovyAssistant.Prompt do
   Returns the system‑prompt string for a catalog‑wide conversation.
 
   Includes a compact one‑line summary for every bike, plus full detailed context
-  only for bikes that match keywords in `user_message` (pseudo‑RAG).
-  If no bikes match (e.g. general questions), only the catalog summary is included.
+  only for bikes that are relevant to `user_message`.
+
+  Relevance is determined in order of preference:
+  1. `relevant_bike_ids` — a list of bike IDs from a vector similarity search
+     (pass `nil` or omit to skip).
+  2. Keyword matching via `relevant_bikes/2` — lightweight fallback used when
+     embeddings are not yet populated or the embedding API is unavailable.
+
+  If no bikes match either strategy, only the catalog summary is included.
   """
-  def build_catalog_system_prompt(bikes, user_message) do
-    matched = relevant_bikes(bikes, user_message)
+  def build_catalog_system_prompt(bikes, user_message, relevant_bike_ids \\ nil) do
+    matched =
+      cond do
+        is_list(relevant_bike_ids) and relevant_bike_ids != [] ->
+          Enum.filter(bikes, fn bike -> bike.id in relevant_bike_ids end)
+
+        true ->
+          relevant_bikes(bikes, user_message)
+      end
 
     detailed_section =
       case matched do
