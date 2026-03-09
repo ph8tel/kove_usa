@@ -13,6 +13,8 @@ defmodule Kove.KovyAssistant do
 
   alias Kove.KovyAssistant.Prompt
   alias Kove.KovyAssistant.InputSanitizer
+  alias Kove.KovyAssistant.ContextBuilder
+  alias Kove.KovyAssistant.RateLimiter
   alias Kove.KovyAssistant.GroqError
 
   require Logger
@@ -36,14 +38,18 @@ defmodule Kove.KovyAssistant do
   `chat_history` should be a list of `%{role: :user | :assistant, content: ...}` maps
   representing the conversation so far (including the latest user message).
 
+  `context` is an optional map with:
+    * `:tier`            — `:public` (default) or `:authenticated`
+    * `:rate_limit_key`  — `{:ip, "1.2.3.4"}` or `{:user, user_id}` (omit to skip rate limiting)
+
   Response tokens are streamed back to `caller_pid` (defaults to `self()`) as:
 
     * `{:kovy_chunk, text}`
     * `{:kovy_done}`
     * `{:kovy_error, reason}`
   """
-  def send_message(bike, chat_history, caller_pid \\ self()) do
-    GenServer.cast(__MODULE__, {:send_message, bike, chat_history, caller_pid})
+  def send_message(bike, chat_history, caller_pid \\ self(), context \\ %{}) do
+    GenServer.cast(__MODULE__, {:send_message, bike, chat_history, caller_pid, context})
   end
 
   @doc """
@@ -53,10 +59,14 @@ defmodule Kove.KovyAssistant do
   keywords, and only matching bikes get their full specs serialised into the prompt.
   A compact catalog summary is always included.
 
-  Streaming response messages are identical to `send_message/3`.
+  `context` is an optional map with:
+    * `:tier`            — `:public` (default) or `:authenticated`
+    * `:rate_limit_key`  — `{:ip, "1.2.3.4"}` or `{:user, user_id}` (omit to skip rate limiting)
+
+  Streaming response messages are identical to `send_message/4`.
   """
-  def send_catalog_message(bikes, chat_history, caller_pid \\ self()) do
-    GenServer.cast(__MODULE__, {:send_catalog_message, bikes, chat_history, caller_pid})
+  def send_catalog_message(bikes, chat_history, caller_pid \\ self(), context \\ %{}) do
+    GenServer.cast(__MODULE__, {:send_catalog_message, bikes, chat_history, caller_pid, context})
   end
 
   # ── Server callbacks ─────────────────────────────────────────────────
@@ -67,110 +77,153 @@ defmodule Kove.KovyAssistant do
   end
 
   @impl true
-  def handle_cast({:send_message, bike, chat_history, caller_pid}, state) do
+  def handle_cast({:send_message, bike, chat_history, caller_pid, context}, state) do
+    tier = Map.get(context, :tier, :public)
+    rate_limit_key = Map.get(context, :rate_limit_key)
+
     Logger.info("KovyAssistant: starting chat for bike",
       bike: bike.name,
       history_length: length(chat_history),
+      tier: tier,
       caller: inspect(caller_pid)
     )
 
-    Task.Supervisor.start_child(Kove.TaskSupervisor, fn ->
-      try do
-        groq = groq_module()
-        Logger.info("KovyAssistant task: building prompt", bike: bike.name)
-        clean_history = InputSanitizer.sanitize_history(chat_history)
-        system_prompt = Prompt.build_system_prompt(bike)
+    with :ok <- check_rate_limit(rate_limit_key, tier, caller_pid) do
+      Task.Supervisor.start_child(Kove.TaskSupervisor, fn ->
+        try do
+          groq = groq_module()
+          Logger.info("KovyAssistant task: building prompt", bike: bike.name)
 
-        api_messages =
-          [
-            %{"role" => "system", "content" => system_prompt}
-            | Enum.map(clean_history, fn msg ->
-                %{"role" => to_string(msg.role), "content" => msg.content}
-              end)
-          ]
+          clean_history =
+            chat_history
+            |> InputSanitizer.sanitize_history()
+            |> ContextBuilder.trim_history(tier)
 
-        Logger.info("KovyAssistant task: streaming to Groq",
-          bike: bike.name,
-          message_count: length(api_messages),
-          api_key_configured: groq.api_key_available?()
-        )
+          system_prompt = Prompt.build_system_prompt(bike)
 
-        stream_with_retry(api_messages, caller_pid, 1)
-      rescue
-        e ->
-          Logger.error("KovyAssistant task crashed",
+          api_messages =
+            [
+              %{"role" => "system", "content" => system_prompt}
+              | Enum.map(clean_history, fn msg ->
+                  %{"role" => to_string(msg.role), "content" => msg.content}
+                end)
+            ]
+
+          Logger.info("KovyAssistant task: streaming to Groq",
             bike: bike.name,
-            error: Exception.message(e),
-            stacktrace: Exception.format_stacktrace(__STACKTRACE__)
+            message_count: length(api_messages),
+            api_key_configured: groq.api_key_available?()
           )
 
-          send(
-            caller_pid,
-            {:kovy_error, :internal_error,
-             GroqError.message(%GroqError{type: :internal_error, message: Exception.message(e)})}
-          )
-      end
-    end)
+          stream_with_retry(api_messages, caller_pid, 1)
+        rescue
+          e ->
+            Logger.error("KovyAssistant task crashed",
+              bike: bike.name,
+              error: Exception.message(e),
+              stacktrace: Exception.format_stacktrace(__STACKTRACE__)
+            )
+
+            send(
+              caller_pid,
+              {:kovy_error, :internal_error,
+               GroqError.message(%GroqError{type: :internal_error, message: Exception.message(e)})}
+            )
+        end
+      end)
+    end
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_cast({:send_catalog_message, bikes, chat_history, caller_pid}, state) do
+  def handle_cast({:send_catalog_message, bikes, chat_history, caller_pid, context}, state) do
+    tier = Map.get(context, :tier, :public)
+    rate_limit_key = Map.get(context, :rate_limit_key)
+
     Logger.info("KovyAssistant: starting catalog chat",
       bike_count: length(bikes),
       history_length: length(chat_history),
+      tier: tier,
       caller: inspect(caller_pid)
     )
 
-    Task.Supervisor.start_child(Kove.TaskSupervisor, fn ->
-      try do
-        groq = groq_module()
-        clean_history = InputSanitizer.sanitize_history(chat_history)
+    with :ok <- check_rate_limit(rate_limit_key, tier, caller_pid) do
+      Task.Supervisor.start_child(Kove.TaskSupervisor, fn ->
+        try do
+          groq = groq_module()
 
-        # Extract latest user message for keyword matching (pseudo-RAG).
-        # Use the sanitized query variant — no injection patterns, length-bounded.
-        last_user_message =
-          clean_history
-          |> Enum.reverse()
-          |> Enum.find(fn msg -> msg.role == :user end)
-          |> case do
-            nil -> ""
-            msg -> InputSanitizer.sanitize_query(msg.content)
-          end
+          clean_history =
+            chat_history
+            |> InputSanitizer.sanitize_history()
+            |> ContextBuilder.trim_history(tier)
 
-        system_prompt = Prompt.build_catalog_system_prompt(bikes, last_user_message)
+          # Extract latest user message for keyword matching (pseudo-RAG).
+          # Use the sanitized query variant — no injection patterns, length-bounded.
+          last_user_message =
+            clean_history
+            |> Enum.reverse()
+            |> Enum.find(fn msg -> msg.role == :user end)
+            |> case do
+              nil -> ""
+              msg -> InputSanitizer.sanitize_query(msg.content)
+            end
 
-        api_messages =
-          [
-            %{"role" => "system", "content" => system_prompt}
-            | Enum.map(clean_history, fn msg ->
-                %{"role" => to_string(msg.role), "content" => msg.content}
-              end)
-          ]
+          system_prompt = Prompt.build_catalog_system_prompt(bikes, last_user_message)
 
-        Logger.info("KovyAssistant task: streaming catalog to Groq",
-          message_count: length(api_messages),
-          api_key_configured: groq.api_key_available?()
-        )
+          api_messages =
+            [
+              %{"role" => "system", "content" => system_prompt}
+              | Enum.map(clean_history, fn msg ->
+                  %{"role" => to_string(msg.role), "content" => msg.content}
+                end)
+            ]
 
-        stream_with_retry(api_messages, caller_pid, 1)
-      rescue
-        e ->
-          Logger.error("KovyAssistant catalog task crashed",
-            error: Exception.message(e),
-            stacktrace: Exception.format_stacktrace(__STACKTRACE__)
+          Logger.info("KovyAssistant task: streaming catalog to Groq",
+            message_count: length(api_messages),
+            api_key_configured: groq.api_key_available?()
           )
 
-          send(
-            caller_pid,
-            {:kovy_error, :internal_error,
-             GroqError.message(%GroqError{type: :internal_error, message: Exception.message(e)})}
-          )
-      end
-    end)
+          stream_with_retry(api_messages, caller_pid, 1)
+        rescue
+          e ->
+            Logger.error("KovyAssistant catalog task crashed",
+              error: Exception.message(e),
+              stacktrace: Exception.format_stacktrace(__STACKTRACE__)
+            )
+
+            send(
+              caller_pid,
+              {:kovy_error, :internal_error,
+               GroqError.message(%GroqError{type: :internal_error, message: Exception.message(e)})}
+            )
+        end
+      end)
+    end
 
     {:noreply, state}
+  end
+
+  # ── Rate limiting ────────────────────────────────────────────────────
+
+  # If no rate_limit_key is provided, skip the check entirely.
+  defp check_rate_limit(nil, _tier, _caller_pid), do: :ok
+
+  defp check_rate_limit(rate_limit_key, tier, caller_pid) do
+    case RateLimiter.check_and_increment(rate_limit_key, tier) do
+      :ok ->
+        :ok
+
+      {:error, :rate_limited, retry_after_s} ->
+        message =
+          GroqError.message(%GroqError{
+            type: :rate_limited,
+            message: "Too many requests. Please wait #{retry_after_s} seconds and try again."
+          })
+
+        send(caller_pid, {:kovy_error, :rate_limited, message})
+        :error
+    end
   end
 
   # ── Retry logic ──────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ defmodule Kove.Application do
       {DNSCluster, query: Application.get_env(:kove, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Kove.PubSub},
       {Task.Supervisor, name: Kove.TaskSupervisor},
+      Kove.KovyAssistant.RateLimiter,
       Kove.KovyAssistant,
       # Start to serve requests, typically the last entry
       KoveWeb.Endpoint

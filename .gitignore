@@ -58,3 +58,4 @@ cover/
 
 # Local environment
 .tool-versions
+.vscode/.phoenix-pulse-cache.json

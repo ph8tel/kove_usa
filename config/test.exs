@@ -29,6 +29,10 @@ config :swoosh, :api_client, false
 # Use mock Groq client in tests
 config :kove, :groq_module, Kove.KovyAssistant.GroqMock
 
+# Disable rate limiting in tests — all test connections share 127.0.0.1 as peer
+# IP, causing unrelated tests to trip each other's rate limits.
+config :kove, :rate_limiter_enabled, false
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

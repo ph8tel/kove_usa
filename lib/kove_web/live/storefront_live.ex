@@ -11,13 +11,19 @@ defmodule KoveWeb.StorefrontLive do
   @impl true
   def mount(_params, _session, socket) do
     bikes = Bikes.list_bikes()
-    bikes_full = Bikes.list_bikes_full()
+
+    rate_limit_key =
+      case get_connect_info(socket, :peer_data) do
+        %{address: addr} -> {:ip, :inet.ntoa(addr) |> to_string()}
+        _ -> nil
+      end
 
     {:ok,
      socket
      |> assign(:page_title, "Kove Moto USA")
      |> assign(:bikes, bikes)
-     |> assign(:bikes_full, bikes_full)
+     |> assign(:bikes_full, nil)
+     |> assign(:rate_limit_key, rate_limit_key)
      |> assign(:chat_messages, [])
      |> assign(:chat_loading, false)
      |> assign(:chat_open, false)}
@@ -168,12 +174,25 @@ defmodule KoveWeb.StorefrontLive do
     if socket.assigns.chat_loading do
       {:noreply, socket}
     else
+      # Lazy-load the full bike catalog on the first chat message of this session.
+      socket =
+        if is_nil(socket.assigns.bikes_full) do
+          assign(socket, :bikes_full, Bikes.list_bikes_full())
+        else
+          socket
+        end
+
       user_msg = %{role: :user, content: message}
       assistant_msg = %{role: :assistant, content: "", streaming: true}
 
       history = socket.assigns.chat_messages ++ [user_msg]
 
-      KovyAssistant.send_catalog_message(socket.assigns.bikes_full, history)
+      context = %{
+        tier: :public,
+        rate_limit_key: socket.assigns.rate_limit_key
+      }
+
+      KovyAssistant.send_catalog_message(socket.assigns.bikes_full, history, self(), context)
 
       {:noreply,
        socket
@@ -188,6 +207,13 @@ defmodule KoveWeb.StorefrontLive do
     if socket.assigns.chat_loading do
       {:noreply, socket}
     else
+      socket =
+        if is_nil(socket.assigns.bikes_full) do
+          assign(socket, :bikes_full, Bikes.list_bikes_full())
+        else
+          socket
+        end
+
       # Drop the failed assistant message, keeping the original user message in history
       history =
         case socket.assigns.chat_messages do
@@ -197,7 +223,12 @@ defmodule KoveWeb.StorefrontLive do
 
       assistant_msg = %{role: :assistant, content: "", streaming: true}
 
-      KovyAssistant.send_catalog_message(socket.assigns.bikes_full, history)
+      context = %{
+        tier: :public,
+        rate_limit_key: socket.assigns.rate_limit_key
+      }
+
+      KovyAssistant.send_catalog_message(socket.assigns.bikes_full, history, self(), context)
 
       {:noreply,
        socket
