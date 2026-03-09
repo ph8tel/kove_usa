@@ -48,6 +48,8 @@ defmodule Kove.Release do
   Safe to re-run. Requires `OPENAI_API_KEY` to be set in the environment.
   """
   def embed_descriptions do
+    # :req must be started so that Req.Finch is registered; :kove loaded for Repo config
+    Application.ensure_all_started(:req)
     load_app()
 
     import Ecto.Query
@@ -55,48 +57,51 @@ defmodule Kove.Release do
     alias Kove.Descriptions.Description
     alias Kove.KovyAssistant.Embeddings
 
-    pending =
-      from(d in Description,
-        where: is_nil(d.embedding),
-        select: struct(d, [:id, :bike_id, :body])
-      )
-      |> Repo.all()
+    {:ok, _, _} =
+      Ecto.Migrator.with_repo(Repo, fn _repo ->
+        pending =
+          from(d in Description,
+            where: is_nil(d.embedding),
+            select: struct(d, [:id, :bike_id, :body])
+          )
+          |> Repo.all()
 
-    total = length(pending)
+        total = length(pending)
 
-    if total == 0 do
-      IO.puts("✓ All descriptions already have embeddings — nothing to do.")
-    else
-      IO.puts("Embedding #{total} descriptions…")
+        if total == 0 do
+          IO.puts("✓ All descriptions already have embeddings — nothing to do.")
+        else
+          IO.puts("Embedding #{total} descriptions…")
 
-      pending
-      |> Enum.with_index(1)
-      |> Enum.each(fn {desc, n} ->
-        case Embeddings.embed_text(desc.body) do
-          {:ok, vector} ->
-            desc
-            |> Ecto.Changeset.change(embedding: vector)
-            |> Repo.update!()
+          pending
+          |> Enum.with_index(1)
+          |> Enum.each(fn {desc, n} ->
+            case Embeddings.embed_text(desc.body) do
+              {:ok, vector} ->
+                desc
+                |> Ecto.Changeset.change(embedding: vector)
+                |> Repo.update!()
 
-            IO.puts("  [#{n}/#{total}] ✓ description #{desc.id} (bike #{desc.bike_id})")
+                IO.puts("  [#{n}/#{total}] ✓ description #{desc.id} (bike #{desc.bike_id})")
 
-          {:error, :no_api_key} ->
-            IO.puts("  ✗ OPENAI_API_KEY is not set — aborting.")
-            System.halt(1)
+              {:error, :no_api_key} ->
+                IO.puts("  ✗ OPENAI_API_KEY is not set — aborting.")
+                System.halt(1)
 
-          {:error, kind, message} ->
-            IO.puts("  [#{n}/#{total}] ✗ description #{desc.id}: #{kind} — #{message}")
+              {:error, kind, message} ->
+                IO.puts("  [#{n}/#{total}] ✗ description #{desc.id}: #{kind} — #{message}")
 
-          {:error, kind} ->
-            IO.puts("  [#{n}/#{total}] ✗ description #{desc.id}: #{kind}")
+              {:error, kind} ->
+                IO.puts("  [#{n}/#{total}] ✗ description #{desc.id}: #{kind}")
+            end
+
+            # Brief pause to stay under OpenAI rate limits
+            Process.sleep(100)
+          end)
+
+          IO.puts("\nDone.")
         end
-
-        # Brief pause to stay under OpenAI rate limits
-        Process.sleep(100)
       end)
-
-      IO.puts("\nDone.")
-    end
   end
 
   defp repos do
@@ -104,6 +109,7 @@ defmodule Kove.Release do
   end
 
   defp load_app do
-    Application.ensure_all_started(@app)
+    Application.ensure_all_started(:ssl)
+    Application.ensure_loaded(@app)
   end
 end
