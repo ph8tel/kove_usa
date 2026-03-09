@@ -24,6 +24,26 @@ defmodule Kove.Release do
   end
 
   @doc """
+  Seeds the database from priv/repo/seeds.exs.
+  Safe to run on a fresh database. Requires the DB to be migrated first.
+
+  Run via:
+
+      /app/bin/kove eval \"Kove.Release.seed()\"
+  """
+  def seed do
+    load_app()
+
+    [repo] = repos()
+
+    {:ok, _, _} =
+      Ecto.Migrator.with_repo(repo, fn _repo ->
+        seeds_path = Application.app_dir(:kove, "priv/repo/seeds.exs")
+        Code.eval_file(seeds_path)
+      end)
+  end
+
+  @doc """
   Populates `descriptions.embedding` for every row where it is NULL.
   Safe to re-run. Requires `OPENAI_API_KEY` to be set in the environment.
   """

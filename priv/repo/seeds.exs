@@ -18,10 +18,12 @@ alias Kove.Repo
 # ============================================================================
 
 # Read and parse the bijes.json file
-bijes_path = Path.expand("../../bijes.json", __DIR__)
+bijes_path =
+  [Path.join(__DIR__, "bijes.json"), Path.expand("../../bijes.json", __DIR__)]
+  |> Enum.find(&File.exists?/1)
 
-unless File.exists?(bijes_path) do
-  raise "bijes.json not found at #{bijes_path}"
+unless bijes_path do
+  raise "bijes.json not found (checked priv/repo/bijes.json and project root)"
 end
 
 {:ok, json_content} = File.read(bijes_path)
