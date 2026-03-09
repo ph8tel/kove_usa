@@ -46,7 +46,7 @@ defmodule SeedHelpers do
         end
 
       String.contains?(product_name, "450") and String.contains?(product_name, "MX") ->
-        {"450 (449cc SOHC Single) MX", "Standard"}
+        {"MX450 (449cc SOHC Single)", "Standard"}
 
       String.contains?(product_name, "450") and String.contains?(product_name, "Rally") ->
         if String.contains?(product_name, "Pro Off-Road") do
