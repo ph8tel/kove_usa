@@ -144,6 +144,26 @@ defmodule Kove.Bikes do
   end
 
   @doc """
+  Returns the bike IDs whose descriptions are most similar to `query_vector`
+  (cosine distance via pgvector). Only rows with a non-NULL embedding are
+  considered. Returns up to `limit` distinct bike IDs ordered nearest-first.
+  """
+  def search_bikes_by_embedding(query_vector, limit \\ 4) do
+    # Inner query: rank descriptions by cosine distance, take the top `limit`.
+    # Outer query: deduplicate bike_ids (a bike may have several descriptions).
+    inner =
+      from(d in Kove.Descriptions.Description,
+        where: not is_nil(d.embedding),
+        order_by: fragment("? <=> ?", d.embedding, ^query_vector),
+        limit: ^limit,
+        select: d.bike_id
+      )
+
+    from(b in subquery(inner), select: b.bike_id, distinct: true)
+    |> Repo.all()
+  end
+
+  @doc """
   Returns a human-readable category label.
   """
   def category_label(:adv), do: "Adventure"

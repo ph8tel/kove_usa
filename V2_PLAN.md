@@ -61,9 +61,9 @@ The column exists but is always `nil`. The `descriptions_without_embedding` work
 
 ### 2.1 Populate Embeddings (True RAG)
 
-Groq provides an embedding endpoint (`nomic-embed-text-v1.5` model, 768 dimensions — note: the schema uses 1536 so migration needed, or switch embedding model to one with 1536 dims like OpenAI `text-embedding-3-small`).
+Groq has no embedding endpoint available. Uses OpenAI `text-embedding-3-small` at 768 dimensions (the `dimensions` parameter compresses the output from 1536 → 768, retaining quality while matching the current column size).
 
-**Decision point:** Groq embeddings (free, fast, stays within one API key) vs OpenAI embeddings (1536-dim, highly compatible, small cost). Recommend **OpenAI `text-embedding-3-small`** to match the existing `vector(1536)` column and keep the schema unchanged.
+**Decision:** OpenAI `text-embedding-3-small` at 768 dims. The `vector(1536)` column was migrated to `vector(768)` via migration `20260309000002`.
 
 Steps:
 1. Add `OPENAI_API_KEY` to env and `runtime.exs`.
@@ -379,8 +379,8 @@ Phase 0 — Foundation fixes (do before anything else)
   [x] ContextBuilder — token budget trimming
   [x] Lazy-load bikes_full in StorefrontLive
   [x] Rate limiting — IP-based, two tiers (public/authenticated)
-  [ ] Populate embeddings (Mix task + OpenAI embed API)
-  [ ] Replace keyword matching with vector search
+  [x] Populate embeddings (Mix task + OpenAI embed API) — run `mix kove.embed_descriptions` after adding OPENAI_API_KEY to .env
+  [x] Replace keyword matching with vector search
 
 Phase 1 — Auth & User model
   [ ] mix phx.gen.auth Accounts User users

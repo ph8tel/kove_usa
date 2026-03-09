@@ -11,6 +11,8 @@ config :kove,
   ecto_repos: [Kove.Repo],
   generators: [timestamp_type: :utc_datetime]
 
+config :kove, Kove.Repo, types: Kove.PostgrexTypes
+
 # Configures the endpoint
 config :kove, KoveWeb.Endpoint,
   url: [host: "localhost"],

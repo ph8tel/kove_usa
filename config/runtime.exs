@@ -140,3 +140,26 @@ groq_key =
 if groq_key do
   config :kove, :groq_api_key, groq_key
 end
+
+# Load OpenAI API key — used for text embeddings (text-embedding-3-small)
+openai_key =
+  System.get_env("OPENAI_API_KEY") ||
+    (
+      env_path = Path.expand("../.env", __DIR__)
+
+      if File.exists?(env_path) do
+        env_path
+        |> File.read!()
+        |> String.split("\n", trim: true)
+        |> Enum.find_value(fn line ->
+          case String.split(line, "=", parts: 2) do
+            ["OPENAI_API_KEY", val] -> String.trim(val)
+            _ -> nil
+          end
+        end)
+      end
+    )
+
+if openai_key do
+  config :kove, :openai_api_key, openai_key
+end
