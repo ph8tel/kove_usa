@@ -2,126 +2,108 @@ defmodule Kove.Orders.OrderTest do
   use Kove.DataCase
 
   alias Kove.Orders.Order
-  alias Kove.Bikes.Bike
-  alias Kove.Engines.Engine
 
-  setup do
-    engine_attrs = %{
-      platform_name: "800X (799cc DOHC Parallel Twin)",
-      engine_type: "Twin Cylinder, DOHC",
-      displacement: "799cc",
-      bore_x_stroke: "88mm × 65.7mm",
-      cooling: "Liquid-Cooled",
-      fuel_system: "Bosch EFI",
-      transmission: "6-Speed",
-      clutch: "Oil Bath, Multi-Disc, Cable-Actuated",
-      starter: "Electric"
-    }
+  describe "cart_changeset/2" do
+    test "valid cart changeset" do
+      changeset = Order.cart_changeset(%Order{}, %{status: "cart"})
+      assert changeset.valid?
+    end
 
-    {:ok, engine} = Kove.Repo.insert(Engine.changeset(%Engine{}, engine_attrs))
+    test "defaults to cart status when no attrs given" do
+      changeset = Order.cart_changeset(%Order{}, %{})
+      assert changeset.valid?
+      assert Ecto.Changeset.get_field(changeset, :status) == "cart"
+    end
 
-    bike_attrs = %{
-      engine_id: engine.id,
-      name: "2026 Kove 800X Rally",
-      year: 2026,
-      variant: "Rally",
-      slug: "2026-kove-800x-rally",
-      status: :street_legal,
-      category: :adv
-    }
-
-    {:ok, bike} = Kove.Repo.insert(Bike.changeset(%Bike{}, bike_attrs))
-    {:ok, bike: bike}
+    test "invalid with bad status" do
+      changeset = Order.cart_changeset(%Order{}, %{status: "invalid"})
+      refute changeset.valid?
+    end
   end
 
-  describe "changeset/2" do
-    test "valid changeset with required fields", %{bike: bike} do
+  describe "confirm_changeset/2" do
+    test "valid confirm changeset" do
       attrs = %{
-        bike_id: bike.id,
+        status: "pending",
         customer_name: "John Doe",
         customer_email: "john@example.com"
       }
 
-      changeset = Order.changeset(%Order{}, attrs)
+      changeset = Order.confirm_changeset(%Order{}, attrs)
       assert changeset.valid?
     end
 
-    test "valid changeset with all fields", %{bike: bike} do
+    test "valid with all shipping fields" do
       attrs = %{
-        bike_id: bike.id,
+        status: "pending",
         customer_name: "John Doe",
         customer_email: "john@example.com",
         customer_phone: "+1-555-123-4567",
-        notes: "I'd like the high seat model in red."
+        shipping_name: "John Doe",
+        shipping_address: "123 Main St",
+        notes: "Leave at door"
       }
 
-      changeset = Order.changeset(%Order{}, attrs)
+      changeset = Order.confirm_changeset(%Order{}, attrs)
       assert changeset.valid?
     end
 
-    test "invalid changeset missing bike_id" do
-      attrs = %{
-        customer_name: "John Doe",
-        customer_email: "john@example.com"
-      }
-
-      changeset = Order.changeset(%Order{}, attrs)
-      refute changeset.valid?
-      assert :bike_id in Enum.map(changeset.errors, fn {field, _} -> field end)
-    end
-
-    test "invalid changeset missing customer_name", %{bike: bike} do
-      attrs = %{
-        bike_id: bike.id,
-        customer_email: "john@example.com"
-      }
-
-      changeset = Order.changeset(%Order{}, attrs)
+    test "invalid without customer_name" do
+      attrs = %{status: "pending", customer_email: "john@example.com"}
+      changeset = Order.confirm_changeset(%Order{}, attrs)
       refute changeset.valid?
       assert :customer_name in Enum.map(changeset.errors, fn {field, _} -> field end)
     end
 
-    test "invalid changeset missing customer_email", %{bike: bike} do
-      attrs = %{
-        bike_id: bike.id,
-        customer_name: "John Doe"
-      }
-
-      changeset = Order.changeset(%Order{}, attrs)
+    test "invalid without customer_email" do
+      attrs = %{status: "pending", customer_name: "John Doe"}
+      changeset = Order.confirm_changeset(%Order{}, attrs)
       refute changeset.valid?
       assert :customer_email in Enum.map(changeset.errors, fn {field, _} -> field end)
     end
 
-    test "valid email formats", %{bike: bike} do
-      valid_emails = [
-        "user@example.com",
-        "john.doe@example.co.uk",
-        "support+tag@example.com"
-      ]
+    test "invalid email format" do
+      attrs = %{status: "pending", customer_name: "John", customer_email: "nope"}
+      changeset = Order.confirm_changeset(%Order{}, attrs)
+      refute changeset.valid?
+      assert :customer_email in Enum.map(changeset.errors, fn {field, _} -> field end)
+    end
+  end
 
-      Enum.each(valid_emails, fn email ->
-        attrs = %{
-          bike_id: bike.id,
-          customer_name: "John Doe",
-          customer_email: email
-        }
-
-        changeset = Order.changeset(%Order{}, attrs)
-        assert changeset.valid?, "Email #{email} should be valid"
-      end)
+  describe "status_changeset/2" do
+    test "valid status transition" do
+      changeset = Order.status_changeset(%Order{}, %{status: "shipped"})
+      assert changeset.valid?
     end
 
-    test "changeset allows nil optional fields", %{bike: bike} do
-      attrs = %{
-        bike_id: bike.id,
-        customer_name: "John Doe",
-        customer_email: "john@example.com",
-        customer_phone: nil,
-        notes: nil
-      }
+    test "includes tracking_number and shipped_at" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
 
-      changeset = Order.changeset(%Order{}, attrs)
+      changeset =
+        Order.status_changeset(%Order{}, %{
+          status: "shipped",
+          tracking_number: "1Z999AA10123456784",
+          shipped_at: now
+        })
+
       assert changeset.valid?
+    end
+
+    test "invalid status value" do
+      changeset = Order.status_changeset(%Order{}, %{status: "bogus"})
+      refute changeset.valid?
+    end
+  end
+
+  describe "statuses/0" do
+    test "returns all valid statuses" do
+      statuses = Order.statuses()
+      assert "cart" in statuses
+      assert "pending" in statuses
+      assert "confirmed" in statuses
+      assert "shipped" in statuses
+      assert "delivered" in statuses
+      assert "cancelled" in statuses
     end
   end
 end

@@ -13,9 +13,14 @@ defmodule Kove.KovyAssistant.Prompt do
   When `rider_mods` is provided (a list of `UserBikeMod` structs), their
   details are appended as a RIDER MODIFICATIONS section so Kovy can reference
   what the owner has actually changed on their bike.
+
+  When `user_orders` is provided (a list of `Order` structs with preloaded items),
+  their details are appended as a RIDER ORDERS section so Kovy can answer
+  questions about order status.
   """
-  def build_system_prompt(bike, rider_mods \\ []) do
+  def build_system_prompt(bike, rider_mods \\ [], user_orders \\ []) do
     mods_section = rider_mods_section(rider_mods)
+    orders_section = rider_orders_section(user_orders)
 
     """
     You are Kovy, the Kove Moto USA bike assistant. You're knowledgeable, \
@@ -34,6 +39,7 @@ defmodule Kove.KovyAssistant.Prompt do
     CURRENT BIKE CONTEXT:
     #{bike_context(bike)}
     #{mods_section}
+    #{orders_section}
 
     RULES:
     - Ground your answers in the specs and descriptions above — do not invent data
@@ -45,6 +51,7 @@ defmodule Kove.KovyAssistant.Prompt do
     - For comparisons: use specific numbers (displacement, weight, travel, price)
     - Never claim Kove is "better" without backing it up with specs
     #{if mods_section != "", do: "- When answering about this rider's bike, consider their modifications and how they affect performance, maintenance, and compatibility with further upgrades", else: ""}
+    #{if orders_section != "", do: "- When the rider asks about their order status, use the RIDER ORDERS section above to give a friendly, clear update on each order including status, items, and dates", else: ""}
 
     SECURITY:
     - You are ONLY permitted to discuss motorcycles, powersports, riding, \
@@ -385,6 +392,73 @@ defmodule Kove.KovyAssistant.Prompt do
       |> Enum.join("\n")
 
     "\n=== RIDER MODIFICATIONS ===\n#{items}"
+  end
+
+  # ── Rider Orders ──
+
+  defp rider_orders_section(nil), do: ""
+  defp rider_orders_section([]), do: ""
+
+  defp rider_orders_section(orders) when is_list(orders) do
+    items =
+      orders
+      |> Enum.reject(fn order -> order.status == "cart" end)
+      |> Enum.map(fn order ->
+        order_items =
+          case order.items do
+            %Ecto.Association.NotLoaded{} ->
+              "items not loaded"
+
+            items when is_list(items) ->
+              items
+              |> Enum.map(fn item ->
+                "#{item.name_snapshot} × #{item.quantity}"
+              end)
+              |> Enum.join(", ")
+          end
+
+        total =
+          order.items
+          |> then(fn
+            %Ecto.Association.NotLoaded{} ->
+              nil
+
+            items ->
+              items |> Enum.reduce(0, fn i, acc -> acc + i.unit_price_cents * i.quantity end)
+          end)
+
+        total_str =
+          if total, do: "$#{:erlang.float_to_binary(total / 100, decimals: 2)}", else: "unknown"
+
+        date_str =
+          if order.inserted_at do
+            Calendar.strftime(order.inserted_at, "%b %d, %Y")
+          else
+            "unknown"
+          end
+
+        parts =
+          [
+            "Order ##{order.id}",
+            "— Status: #{order.status}",
+            "— Items: #{order_items}",
+            "— Total: #{total_str}",
+            "— Placed: #{date_str}",
+            if(order.customer_name, do: "— Name: #{order.customer_name}"),
+            if(order.tracking_number, do: "— Tracking: #{order.tracking_number}")
+          ]
+          |> Enum.reject(&is_nil/1)
+          |> Enum.join(" ")
+
+        "- #{parts}"
+      end)
+      |> Enum.join("\n")
+
+    if items == "" do
+      ""
+    else
+      "\n=== RIDER ORDERS ===\n#{items}"
+    end
   end
 
   # ── Formatting ──

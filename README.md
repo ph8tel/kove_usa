@@ -25,7 +25,9 @@ A Phoenix LiveView application for the Kove Moto USA motorcycle catalog with **K
 - **Image carousel** — User-uploaded bike photos stored on Cloudflare R2, displayed in an auto-playing slideshow
 - **My Mods** tab — Track rider modifications (11 categories: exhaust, gearing, suspension, clutch, engine, electronics, intake, controls, tires, protection, lighting) with dollar cost and clickable 5-star rating
 - **Photos** tab — Upload/manage bike photos via form-based R2 uploads with preview
-- **Contextualized Kovy chat** — AI assistant sees the rider's specific bike AND their modifications for personalized answers
+- **Maintenance tab** — Engine-compatible oil change kit cards with one-click add-to-cart
+- **Orders tab** — Cart review, item removal, checkout flow, and order history/status timeline
+- **Order-aware Kovy chat** — AI assistant sees the rider's specific bike, modifications, and non-cart orders; quick ask includes **"My order status?"** when orders exist
 
 ### Auth
 - **Email/password registration and login** via `phx.gen.auth`
@@ -45,7 +47,7 @@ A Phoenix LiveView application for the Kove Moto USA motorcycle catalog with **K
 | Object Storage | Cloudflare R2 (AWS Sig V4) |
 | HTTP Client | Req ~> 0.5 |
 | Auth | `phx.gen.auth` (bcrypt, magic link, sessions) |
-| Testing | ExUnit (315 tests), Mox (for Groq client) |
+| Testing | ExUnit (379 tests), Mox (for Groq client) |
 | Deployment | Fly.io |
 
 ## Quick Start
@@ -73,7 +75,7 @@ Visit [localhost:4000](http://localhost:4000).
 |------|----------|------|-------------|
 | `/` | `StorefrontLive` | Public | 2×3 bike grid + catalog-wide Kovy chat |
 | `/bikes/:slug` | `BikeDetailsLive` | Public | Full spec page with tabs + single-bike Kovy chat |
-| `/home` | `UserHomeLive` | **Required** | My Garage: carousel, mods, photos, Kovy chat |
+| `/home` | `UserHomeLive` | **Required** | My Garage: carousel, mods, photos, maintenance kits, orders, Kovy chat |
 | `/users/register` | `UserLive.Registration` | Public | Email/password registration |
 | `/users/log-in` | `UserLive.Login` | Public | Email/password login |
 | `/users/log-in/:token` | `UserLive.Confirmation` | Public | Magic-link confirmation |
@@ -97,7 +99,14 @@ lib/kove/
 ├── bike_features/bike_feature.ex   # BikeFeature schema (1:many with bike)
 ├── images/image.ex                 # Image schema (1:many with bike)
 ├── descriptions/description.ex     # Description schema (1:many, has pgvector embedding)
-├── orders/order.ex                 # Order schema
+├── orders.ex                       # Orders context (cart, checkout, order history)
+├── orders/
+│   ├── order.ex                    # Order schema
+│   └── order_item.ex               # OrderItem schema
+├── parts.ex                        # Parts context (kit lookup + compatibility)
+├── parts/
+│   ├── part_kit.ex                 # PartKit schema
+│   └── part_kit_compatibility.ex   # Engine compatibility join schema
 ├── user_bikes.ex                   # UserBikes context (garage, images, mods)
 ├── user_bikes/
 │   ├── user_bike.ex                # UserBike schema (user's bike registration)
@@ -108,7 +117,7 @@ lib/kove/
 ├── currency.ex                     # Currency helpers
 ├── kovy_assistant.ex               # GenServer — dispatches chat to TaskSupervisor → Groq
 ├── kovy_assistant/
-│   ├── prompt.ex                   # Builds structured system prompts from bike data + rider mods
+│   ├── prompt.ex                   # Builds structured system prompts from bike data + rider mods + rider orders
 │   ├── context_builder.ex          # Builds context maps for prompts
 │   ├── embeddings.ex               # OpenAI text-embedding-3-small integration
 │   ├── groq.ex                     # Groq API client — streaming SSE + sync modes
@@ -151,7 +160,7 @@ test/
 │   ├── accounts_test.exs
 │   ├── kovy_assistant_test.exs
 │   ├── bikes/, engines/, chassis_specs/, dimensions/, bike_features/
-│   ├── images/, descriptions/, orders/
+│   ├── images/, descriptions/, orders/, parts/
 │   ├── user_bikes/mods_test.exs, user_bike_mod_test.exs
 │   └── kovy_assistant/
 │       ├── prompt_test.exs, groq_test.exs
@@ -168,11 +177,13 @@ test/
     ├── conn_case.ex, data_case.ex, chat_case.ex
     └── fixtures/ (accounts_fixtures.ex, bikes_fixtures.ex)
 
-priv/repo/migrations/               # 15 migrations
+priv/repo/migrations/               # 20+ migrations
 ├── enable_pgvector
 ├── create_engines, create_bikes, create_chassis_specs
 ├── create_dimensions, create_bike_features, create_images
-├── create_descriptions, create_orders
+├── create_descriptions, create_orders, create_parts_catalog
+├── create_part_kit_compatibilities, evolve_orders_for_checkout, create_order_items
+├── seed_oil_change_kits (idempotent data migration)
 ├── fix_mx450_engine_id, resize_description_embedding
 ├── create_users_auth_tables
 ├── create_user_bikes, create_user_bike_images
@@ -196,14 +207,15 @@ Parent LiveView
   │ BikeDetailsLive:  KovyAssistant.send_message(bike, history)
   │ StorefrontLive:   KovyAssistant.send_catalog_message(bikes_full, history)
   │ UserHomeLive:     KovyAssistant.send_message(bike, history, self(), context)
-  │                   context includes rider_mods for personalized answers
+  │                   context includes rider_mods + user_orders for personalized answers
   ▼
 KovyAssistant (GenServer)
   │ GenServer.cast → Task.Supervisor.start_child
   ▼
 Task (async)
   ├── Prompt.build_system_prompt(bike)            # single-bike chat
-  ├── Prompt.build_system_prompt(bike, rider_mods) # My Garage chat (+ rider mods)
+  ├── Prompt.build_system_prompt(bike, rider_mods, user_orders)
+  │                                            # My Garage chat (+ rider mods + order status)
   ├── Prompt.build_catalog_system_prompt/2         # storefront chat
   │    └── Prompt.relevant_bikes/2 (keyword pseudo-RAG)
   └── Groq.stream_chat(messages, caller_pid)
@@ -235,15 +247,19 @@ engines (1) ──< bikes (1) ──< chassis_specs
                     │ ──< bike_features
                     │ ──< images
                     │ ──< descriptions (has vector(768) embedding)
-                    └──< orders
+                    ├──< orders ──< order_items >── belongs_to part_kits
+                    └──< part_kit_compatibilities >── belongs_to part_kits
+
+part_kits (1) ──< part_kit_compatibilities
+          └──< order_items
 ```
 
-14 Ecto schemas across 4 contexts. Six bikes seeded: 800X Rally, 800X Pro, 800X Adventure, 450 Rally, MX 250F, MX 450F across 4 engine platforms.
+20+ Ecto schemas across accounts, bikes, user_bikes, orders, parts, and kovy_assistant contexts. Six bikes seeded: 800X Rally, 800X Pro, 800X Adventure, 450 Rally, MX 250F, MX 450F across 4 engine platforms.
 
 ## Testing
 
 ```bash
-# Run all tests (315 tests)
+# Run all tests
 mix test
 
 # Run specific test areas
@@ -255,7 +271,7 @@ mix test test/kove_web/live/                # LiveView tests
 mix precommit
 ```
 
-Current status: **315 tests passing**.
+Current status: **379 tests passing**.
 
 ## Environment Variables
 
