@@ -42,6 +42,7 @@ defmodule Kove.KovyAssistant do
   `context` is an optional map with:
     * `:tier`            — `:public` (default) or `:authenticated`
     * `:rate_limit_key`  — `{:ip, "1.2.3.4"}` or `{:user, user_id}` (omit to skip rate limiting)
+    * `:rider_mods`      — list of `UserBikeMod` structs for the owner's modifications
 
   Response tokens are streamed back to `caller_pid` (defaults to `self()`) as:
 
@@ -81,11 +82,13 @@ defmodule Kove.KovyAssistant do
   def handle_cast({:send_message, bike, chat_history, caller_pid, context}, state) do
     tier = Map.get(context, :tier, :public)
     rate_limit_key = Map.get(context, :rate_limit_key)
+    rider_mods = Map.get(context, :rider_mods, [])
 
     Logger.info("KovyAssistant: starting chat for bike",
       bike: bike.name,
       history_length: length(chat_history),
       tier: tier,
+      rider_mods_count: length(rider_mods),
       caller: inspect(caller_pid)
     )
 
@@ -100,7 +103,7 @@ defmodule Kove.KovyAssistant do
             |> InputSanitizer.sanitize_history()
             |> ContextBuilder.trim_history(tier)
 
-          system_prompt = Prompt.build_system_prompt(bike)
+          system_prompt = Prompt.build_system_prompt(bike, rider_mods)
 
           api_messages =
             [

@@ -1,36 +1,56 @@
-This is **Kove Moto USA** — a Phoenix 1.8 / LiveView 1.1 motorcycle catalog with an AI chat assistant ("Kovy") powered by Groq.
+This is **Kove Moto USA** — a Phoenix 1.8 / LiveView 1.1 motorcycle catalog and rider garage app with an AI chat assistant ("Kovy") powered by Groq. Deployed on Fly.io at `kove.fly.dev`.
 
 ## Application Overview
 
-Kove Moto USA is a product catalog for Kove motorcycles sold in the US market. It has:
+Kove Moto USA is a product catalog and personalized rider dashboard for Kove motorcycles sold in the US market. It has:
 
 - A **storefront** (`/`) showing a 2×3 grid of bike cards plus a catalog-wide streaming Kovy chat panel
 - **Bike detail pages** (`/bikes/:slug`) with spec tabs (Marketing, Engine, Chassis) and the same streaming Kovy chat UI in single-bike context
-- **Kovy**, an AI assistant backed by Groq's `llama-3.3-70b-versatile` model that answers questions grounded in real bike spec data
+- **User authentication** via `phx.gen.auth` with magic-link login and email/password
+- **My Garage** (`/home`) — an authenticated rider dashboard with:
+  - Image carousel for user-uploaded bike photos (Cloudflare R2 storage)
+  - **My Mods** tab — track rider modifications (exhaust, suspension, gearing, etc.) with dollar cost input and 5-star rating
+  - **Photos** tab — upload/manage bike photos via form-based R2 uploads
+  - **Kovy chat** contextualized with the user's specific bike and rider mods
+- **Kovy**, an AI assistant backed by Groq's `llama-3.3-70b-versatile` model that answers questions grounded in real bike spec data and (when on `/home`) the rider's own modifications
 
 ## Key Architecture Decisions
 
-- **No auth yet** — all pages are public
+- **Auth via `phx.gen.auth`** — magic-link login, email/password, session tokens. Public routes (`/`, `/bikes/:slug`) work with or without auth. `/home` requires authentication.
 - **Groq module is swappable** via `config :kove, :groq_module` (defaults to `Kove.KovyAssistant.Groq`, replaced by `GroqMock` in tests via Mox)
 - **Chat is streaming** — Groq SSE chunks flow: Task → `send(caller_pid, {:kovy_chunk, text})` → LiveView `handle_info` → assign update → re-render
 - **Shared `ChatLive` LiveComponent** renders both desktop panel and mobile FAB/drawer; parent LiveViews own state via `handle_info`
 - **Storefront chat uses pseudo-RAG** — keyword matching (`Prompt.relevant_bikes/2`) selects which bikes get full detail context per message
-- **pgvector** extension is enabled but embeddings are not yet populated; description preloads explicitly exclude the vector column to reduce DB transfer/memory
+- **User home chat includes rider mods** — `Prompt.build_system_prompt/2` accepts an optional `rider_mods` list to inject the rider's modifications into the LLM context
+- **pgvector** extension is enabled; `descriptions.embedding` (vector 768) and `user_bike_mods.embedding` (vector 768) columns exist for future semantic search
+- **Cloudflare R2** for user photo storage — upload/delete via `Kove.Storage` with AWS Sig V4 signing (`Kove.Storage.S3Signer`)
+- **Groq rate limiting** via `Kove.KovyAssistant.RateLimiter` GenServer
+- **Input sanitization** via `Kove.KovyAssistant.InputSanitizer` to prevent prompt injection
 - **daisyUI 5** on Tailwind CSS 4.1 — use daisyUI component classes (`btn`, `card`, `tabs`, `input`, etc.)
+- **Dollar/cents conversion in UI** — DB stores `cost_cents` as integer, LiveView converts to/from dollars for display
 
 ## Database Schema
 
 ```
+users (1) ──< user_tokens
+  │
+  └──< user_bikes (1) ──< user_bike_images
+          │ ──< user_bike_mods (has vector(768) embedding column)
+          └── belongs_to bikes
+
 engines (1) ──< bikes (1) ──< chassis_specs
                     │ ──< dimensions
                     │ ──< bike_features
                     │ ──< images
-                    │ ──< descriptions (has vector(1536) embedding column)
+                    │ ──< descriptions (has vector(768) embedding column)
                     └──< orders
 ```
 
-8 Ecto schemas in `lib/kove/`: Bike, Engine, ChassisSpec, Dimension, BikeFeature, Image, Description, Order.
-Context module: `Kove.Bikes` (`list_bikes/0`, `list_bikes_full/0`, `get_bike_by_slug/1`, `get_bike!/1`, `hero_image_url/1`, `format_msrp/1`).
+**Contexts:**
+- `Kove.Bikes` — `list_bikes/0`, `list_bikes_full/0`, `get_bike_by_slug/1`, `get_bike!/1`, `hero_image_url/1`, `format_msrp/1`
+- `Kove.Accounts` — user registration, authentication, magic-link login, session management
+- `Kove.UserBikes` — `get_user_bike/1`, `create_user_bike/2`, image CRUD (`add_image/3`, `delete_image/1`), mod CRUD (`add_mod/2`, `update_mod/2`, `delete_mod/1`, `list_mods/1`)
+- `Kove.Storage` — Cloudflare R2 upload/delete/public_url
 
 ## Supervision Tree
 
@@ -40,8 +60,9 @@ Kove.Supervisor (one_for_one)
 ├── Kove.Repo
 ├── DNSCluster
 ├── Phoenix.PubSub
-├── Task.Supervisor (Kove.TaskSupervisor)  ← spawns Groq streaming tasks
-├── Kove.KovyAssistant (GenServer)          ← receives chat casts, dispatches to TaskSupervisor
+├── Task.Supervisor (Kove.TaskSupervisor)       ← spawns Groq streaming tasks
+├── Kove.KovyAssistant.RateLimiter (GenServer)  ← rate limiter for Groq API
+├── Kove.KovyAssistant (GenServer)              ← receives chat casts, dispatches to TaskSupervisor
 └── KoveWeb.Endpoint
 ```
 
@@ -51,9 +72,11 @@ Kove.Supervisor (one_for_one)
 2. Parent LiveView handles `{:chat_send, msg}`:
   - `BikeDetailsLive` → `KovyAssistant.send_message(bike, history, self())`
   - `StorefrontLive` → `KovyAssistant.send_catalog_message(bikes_full, history, self())`
+  - `UserHomeLive` → `KovyAssistant.send_message(bike, history, self(), context)` (includes `rider_mods`)
 3. `KovyAssistant` (GenServer) casts → `Task.Supervisor.start_child` with an async function
 4. Task builds prompt:
   - single-bike: `Prompt.build_system_prompt/1`
+  - single-bike + mods: `Prompt.build_system_prompt/2` (with `rider_mods` list)
   - catalog: `Prompt.build_catalog_system_prompt/2` (summary of all bikes + detailed specs only for keyword-matched bikes)
 5. Task calls `groq_module().stream_chat(messages, caller_pid)` — streams SSE from Groq API
 6. Each SSE chunk sends `{:kovy_chunk, text}` to the LiveView pid; `:kovy_done` / `:kovy_error` at end
@@ -61,57 +84,111 @@ Kove.Supervisor (one_for_one)
 
 ## Testing
 
-- **137 tests** across app/context/liveview layers, all passing
+- **315 tests** across app/context/schema/liveview/auth layers, all passing
 - **Mox** is used for the Groq client — `GroqBehaviour` defines the contract, `GroqMock` replaces it in test env
 - Tests that exercise the GenServer → Task pipeline use `set_mox_global` (not async) because Mox expectations must cross process boundaries
-- Schema tests validate changesets and constraints for all 8 schemas
+- Schema tests validate changesets and constraints for all schemas (Bike, Engine, ChassisSpec, Dimension, BikeFeature, Image, Description, Order, UserBike, UserBikeMod, UserBikeImage)
 - LiveView tests use `Phoenix.LiveViewTest` — send events, simulate streaming callbacks via `send(view.pid, {:kovy_chunk, ...})`
+- Auth tests cover registration, login, magic-link confirmation, settings, session management
 - Run: `mix test` or `mix precommit` (compile warnings + format + tests)
 
 ## File Layout
 
 ```
 lib/kove/
-├── bikes.ex                    # Context: queries, formatting helpers
+├── accounts.ex                 # Accounts context (auth, users, tokens)
+├── accounts/
+│   ├── scope.ex                # Kove.Accounts.Scope
+│   ├── user.ex                 # User schema
+│   ├── user_notifier.ex        # Email notifications (magic link, etc.)
+│   └── user_token.ex           # Session/magic-link tokens
+├── bikes.ex                    # Bikes context: queries, formatting helpers
 ├── bikes/bike.ex               # Bike schema (belongs_to :engine, has_one/has_many assocs)
 ├── engines/engine.ex           # Engine schema
 ├── chassis_specs/chassis_spec.ex
 ├── dimensions/dimension.ex
 ├── bike_features/bike_feature.ex
 ├── images/image.ex
-├── descriptions/description.ex # Has :embedding field (pgvector)
+├── descriptions/description.ex # Has :embedding field (pgvector, 768 dims)
 ├── orders/order.ex
+├── user_bikes.ex               # UserBikes context (garage, images, mods)
+├── user_bikes/
+│   ├── user_bike.ex            # UserBike schema (user's bike registration)
+│   ├── user_bike_image.ex      # UserBikeImage schema (R2-stored photos)
+│   └── user_bike_mod.ex        # UserBikeMod schema (rider modifications)
+├── storage.ex                  # Cloudflare R2 object storage
+├── storage/
+│   └── s3_signer.ex            # AWS Signature V4 for R2
+├── currency.ex                 # Currency helpers
 ├── kovy_assistant.ex           # GenServer — chat dispatch
-└── kovy_assistant/
-    ├── prompt.ex               # Builds structured system prompt from bike data
-    ├── groq.ex                 # Groq HTTP client (streaming SSE + sync)
-    └── groq_behaviour.ex       # @callback definitions for Mox
+├── kovy_assistant/
+│   ├── prompt.ex               # Builds structured system prompt from bike data + rider mods
+│   ├── context_builder.ex      # Builds context maps for prompts
+│   ├── embeddings.ex           # OpenAI text-embedding-3-small integration
+│   ├── groq.ex                 # Groq HTTP client (streaming SSE + sync)
+│   ├── groq_behaviour.ex       # @callback definitions for Mox
+│   ├── groq_error.ex           # Groq error struct
+│   ├── input_sanitizer.ex      # Chat input sanitization
+│   └── rate_limiter.ex         # Groq API rate limiter (GenServer)
+├── mailer.ex                   # Swoosh mailer
+├── postgrex_types.ex           # Custom Postgrex types (pgvector)
+├── release.ex                  # Release tasks (migrations)
+└── repo.ex                     # Ecto Repo
 
 lib/kove_web/
-├── router.ex                   # "/" → StorefrontLive, "/bikes/:slug" → BikeDetailsLive
+├── router.ex                   # Routes: /, /bikes/:slug, /home, /users/*
+├── user_auth.ex                # Auth plugs and on_mount hooks
 ├── live/
-│   ├── storefront_live.ex      # Bike grid + catalog-wide Kovy chat orchestration
-│   ├── bike_details_live.ex    # Spec tabs + single-bike Kovy chat orchestration
-│   └── chat_live.ex            # Shared chat UI component (desktop panel + mobile drawer/FAB)
+│   ├── storefront_live.ex      # Bike catalog grid + catalog-chat orchestration
+│   ├── bike_details_live.ex    # Spec tabs (Marketing/Engine/Chassis) + single-bike chat
+│   ├── user_home_live.ex       # My Garage: carousel, mods, photos, chat (~957 lines)
+│   ├── chat_live.ex            # Shared Kovy chat UI component (desktop + mobile)
+│   ├── chat_handlers.ex        # Shared chat handler macros/imports
+│   ├── bike_helpers.ex         # Shared bike helper functions
+│   └── user_live/
+│       ├── registration.ex     # User registration
+│       ├── login.ex            # Email/password login
+│       ├── confirmation.ex     # Magic-link confirmation
+│       └── settings.ex         # User settings (email, password)
 ├── components/
 │   ├── core_components.ex
-│   └── layouts.ex
+│   ├── layouts.ex
+│   └── layouts/root.html.heex
 └── controllers/
     ├── error_html.ex
-    └── error_json.ex
+    ├── error_json.ex
+    ├── page_controller.ex
+    └── user_session_controller.ex
 
 config/
-├── runtime.exs                 # Loads GROQ_API_KEY from env or ../.env file
-└── test.exs                    # Sets :groq_module to GroqMock
+├── config.exs                  # Base config
+├── dev.exs                     # Dev DB config
+├── test.exs                    # Test DB + Mox groq_module config
+├── prod.exs                    # Prod config
+└── runtime.exs                 # Loads all env vars / ../.env fallback
 
-assets/js/app.js                # ScrollBottom hook for chat auto-scroll
+assets/js/app.js                # Hooks: ScrollBottom (chat), Carousel (image slideshow)
 ```
 
 ## Environment
 
-- `GROQ_API_KEY` — required for chat (stored in `../.env`, auto-loaded by `runtime.exs`)
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GROQ_API_KEY` | Yes (for chat) | Groq API key |
+| `OPENAI_API_KEY` | Yes (for embeddings) | OpenAI API key |
+| `DATABASE_URL` | Prod only | Neon PostgreSQL connection string |
+| `SECRET_KEY_BASE` | Prod only | Phoenix secret |
+| `R2_ACCOUNT_ID` | Yes (for photos) | Cloudflare R2 account ID |
+| `R2_ACCESS_KEY_ID` | Yes (for photos) | R2 access key |
+| `R2_SECRET_ACCESS_KEY` | Yes (for photos) | R2 secret key |
+| `R2_BUCKET` | Yes (for photos) | R2 bucket name |
+| `R2_PUBLIC_URL` | Yes (for photos) | R2 public URL prefix |
+
+- Dev/test: auto-loaded from `../.env` file by `runtime.exs`
+- Prod: Fly.io secrets (`fly secrets set`)
 - Dev DB: `kove_dev` on localhost:5432 (postgres/postgres)
 - Test DB: `kove_test` with Ecto sandbox
+- Prod DB: Neon PostgreSQL with pgvector
 
 ## Project guidelines
 

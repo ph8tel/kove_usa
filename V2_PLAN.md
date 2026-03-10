@@ -1,23 +1,30 @@
-# Kove Moto USA — V2 Plan: Users, Persistence & LLM Tool Calling
+# Kove Moto USA — V2 Plan: Persistence, LLM Tool Calling & Semantic Search
 
-> Written after a full review of the V1 codebase (March 2026).
-> Covers the current state honestly, what must be fixed before V2 starts,
-> the DB schema additions, and the tool-calling architecture.
+> Updated March 2026 after completing Phase 1 (auth, user garage, rider mods, photo uploads).
+> Covers the current state, remaining V2 work, and the tool-calling architecture.
 
 ---
 
 ## 1. Current State Audit
 
-### What is solid
+### What is built and working ✅
 
 | Layer | Status |
 |---|---|
-| Supervision tree (GenServer → TaskSupervisor → Task) | ✅ Correct. GenServer never blocks; tasks are fire-and-forget. |
+| Supervision tree (GenServer → TaskSupervisor → Task + RateLimiter) | ✅ Correct. GenServer never blocks; tasks are fire-and-forget. RateLimiter protects Groq API. |
 | `GroqBehaviour` + Mox in tests | ✅ Clean contract. Must be extended, not replaced, for V2. |
 | SSE streaming pipeline | ✅ Buffer-based SSE parsing is correct. `into:` callback on `Req.post!` is the right approach. |
-| Input sanitization + prompt security rules | ✅ Just added. Covers prompt injection, truncation, control chars. |
-| pgvector extension | ✅ Installed, `descriptions.embedding vector(1536)` column exists. |
+| Input sanitization + prompt security rules | ✅ Covers prompt injection, truncation, control chars. |
+| pgvector extension | ✅ Installed. `descriptions.embedding vector(768)` and `user_bike_mods.embedding vector(768)` columns exist. |
 | `descriptions_without_embedding` query guard | ✅ Correctly excludes the vector column from all non-embedding queries. |
+| **Auth via `phx.gen.auth`** | ✅ Email/password + magic-link login. Sessions, settings, registration all working. |
+| **User bikes (My Garage)** | ✅ `user_bikes` table + `UserBike` schema + `UserBikes` context. `/home` authenticated route. |
+| **User bike photos** | ✅ `user_bike_images` table + Cloudflare R2 upload/delete. Carousel display with JS hook. |
+| **Rider modifications (My Mods)** | ✅ `user_bike_mods` table with 11 mod types, dollar cost input, 5-star rating. Prompt integration. |
+| **Contextualized garage chat** | ✅ `UserHomeLive` passes rider mods to `KovyAssistant.send_message/4` for personalized Kovy answers. |
+| **OpenAI embeddings module** | ✅ `Kove.KovyAssistant.Embeddings` wraps `text-embedding-3-small` at 768 dims. Not yet used in queries. |
+| **315 tests passing** | ✅ Schema, context, LiveView, auth, prompt, assistant tests all green. |
+| **Fly.io deployment** | ✅ Deployed at `kove.fly.dev` with Neon PostgreSQL + all secrets configured. |
 
 ### Remaining issues before V2
 
@@ -25,23 +32,47 @@
 
 `orders` exists but has no foreign key to a user, no status lifecycle, and is wired to nothing. V2 needs a real order workflow.
 
+#### 1.2 Embeddings not yet populated
+
+The `descriptions.embedding` and `user_bike_mods.embedding` vector columns exist but are empty. Need a Mix task or runtime hook to populate them.
+
+#### 1.3 No chat persistence
+
+Chat history is ephemeral (in LiveView assigns). Anonymous and authenticated users lose history on page reload.
+
 ---
 
-## 2. Prerequisites — What to Build Before V2
+## 2. Completed Prerequisites (Phase 1) ✅
 
-### 2.1 Auth (phx.gen.auth)
+### 2.1 Auth (phx.gen.auth) ✅
 
-Run `mix phx.gen.auth Accounts User users` with email/password. This generates:
+`mix phx.gen.auth Accounts User users` was run. Generated:
 - `users` and `user_tokens` tables
-- `Kove.Accounts` context
-- Registration, log-in, password reset LiveViews
-- `fetch_current_user` plug and `on_mount` hook
+- `Kove.Accounts` context with full auth API
+- Registration, login, magic-link confirmation, settings LiveViews
+- `fetch_current_scope_for_user` plug and `on_mount` hooks
+- Public routes (`/`, `/bikes/:slug`) in `:current_user` live_session
+- Authenticated routes (`/home`, `/users/settings`) in `:require_authenticated_user` live_session
 
-**Important:** Keep the existing public routes (`/` and `/bikes/:slug`) outside any authenticated `live_session`. Only the user-specific routes (orders, garage, saved chats) require auth.
+### 2.2 User Bikes (My Garage) ✅
+
+`user_bikes` table created with `user_id`, `bike_id`, `nickname`, `bike_image_url`. UserBike schema with `has_many :images` and `has_many :mods`.
+
+### 2.3 User Bike Images ✅
+
+`user_bike_images` table with `url`, `storage_key`, `position`. Cloudflare R2 integration via `Kove.Storage` module with AWS Sig V4 signing.
+
+### 2.4 Rider Modifications ✅
+
+`user_bike_mods` table with Postgres enum for 11 mod types, `description`, `brand`, `cost_cents`, `rating` (1-5), `installed_at`, `position`, `embedding` vector(768). Dollar cost UI with clickable 5-star rating.
+
+### 2.5 Garage Chat Integration ✅
+
+`UserHomeLive` extracts rider mods and passes them to `KovyAssistant.send_message/4` via context map. `Prompt.build_system_prompt/2` includes a `=== RIDER MODIFICATIONS ===` section so Kovy can reference the rider's actual setup.
 
 ---
 
-## 3. DB Plan — New Tables for V2
+## 3. DB Plan — Remaining Tables for V2
 
 ### 3.1 Extend `orders` — add user ownership and lifecycle
 
@@ -57,28 +88,7 @@ add :confirmed_at,        :utc_datetime
 
 Status enum values: `:pending → :confirmed → :shipped → :delivered | :cancelled`
 
-### 3.2 New: `user_bikes` — the user's garage
-
-```
-create table(:user_bikes) do
-  add :user_id,       references(:users,  on_delete: :delete_all), null: false
-  add :bike_id,       references(:bikes,  on_delete: :restrict),   null: false
-  add :vin,           :string
-  add :purchase_date, :date
-  add :mileage_km,    :integer
-  add :notes,         :text
-  add :color,         :string
-  timestamps()
-end
-
-create unique_index(:user_bikes, [:user_id, :vin])
-create index(:user_bikes, [:user_id])
-```
-
-Schema: `Kove.UserBikes.UserBike` — `belongs_to :user`, `belongs_to :bike`
-Context: `Kove.UserBikes` — `list_user_bikes/1`, `register_bike/2`, `update_bike/2`
-
-### 3.3 New: `chat_sessions` + `chat_messages` — persistent history
+### 3.2 New: `chat_sessions` + `chat_messages` — persistent history
 
 ```
 create table(:chat_sessions) do
@@ -289,36 +299,48 @@ end
 
 ## 5. V2 Implementation Order
 
-Doing these out of order creates rework. Suggested sequence:
+Phase 1 is complete. Remaining work:
 
 ```
-Phase 1 — Auth & User model
-  [ ] mix phx.gen.auth Accounts User users
-  [ ] Add user_id to existing Order schema + status lifecycle
-  [ ] UserBikes schema + migration + context
-  [ ] Wire current_user into KovyAssistant context map
+Phase 1 — Auth & User model ✅ COMPLETE
+  [x] mix phx.gen.auth Accounts User users
+  [x] UserBikes schema + migration + context
+  [x] User bike images + Cloudflare R2 upload
+  [x] Rider modifications (My Mods) + prompt integration
+  [x] Wire current_user into KovyAssistant context map
+  [x] Fly.io deployment with all secrets
 
-Phase 2 — Chat persistence
+Phase 2 — Embeddings & Semantic Search
+  [ ] Mix task: populate descriptions.embedding via OpenAI text-embedding-3-small
+  [ ] Mix task: populate user_bike_mods.embedding
+  [ ] Swap Prompt.relevant_bikes/2 keyword matching for pgvector cosine similarity
+  [ ] Add Bikes.search_descriptions(query, opts) API
+
+Phase 3 — Chat Persistence
   [ ] chat_sessions + chat_messages migrations + schemas
   [ ] Kove.Chat context (CRUD)
-  [ ] StorefrontLive + BikeDetailsLive: persist/load history when authenticated
+  [ ] StorefrontLive + BikeDetailsLive + UserHomeLive: persist/load history when authenticated
   [ ] Session list page for authenticated users
 
-Phase 3 — LLM Tool Calling
+Phase 4 — LLM Tool Calling
   [ ] Extend GroqBehaviour with chat_with_tools/2
   [ ] Implement Groq.chat_with_tools/2
   [ ] Tool behaviour + ToolRegistry
   [ ] GetOrderStatus tool (+ Orders context update)
   [ ] RecommendParts tool
   [ ] GetUserGarage tool
+  [ ] GetServiceSchedule tool
   [ ] KovyAssistant.send_message_v2/3 handler
   [ ] Update Mox mock for new callback
   [ ] Tests for each tool module
 
-Phase 4 — UX
-  [ ] Account pages (garage management, order history)
+Phase 5 — Orders & UX
+  [ ] Add user_id to Order schema + status lifecycle
+  [ ] Order capture form on bike detail page
+  [ ] Account pages (order history)
   [ ] Chat session history sidebar
   [ ] "Kovy knows your bikes" personalised quick-asks
+  [ ] Maintenance tab + Orders tab in My Garage
 ```
 
 ---
