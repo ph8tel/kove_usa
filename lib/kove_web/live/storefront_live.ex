@@ -32,50 +32,52 @@ defmodule KoveWeb.StorefrontLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-8">
-      <%!-- Left Column: Hero + Bike Grid --%>
-      <div class="lg:col-span-2">
-        <%!-- Hero Section --%>
-        <section class="text-center mb-16">
-          <h1 class="text-5xl sm:text-6xl font-black tracking-tight">
-            KOVE MOTO <span class="text-primary">USA</span>
-          </h1>
-          <p class="mt-4 text-lg text-base-content/60 max-w-2xl mx-auto">
-            Demo of AI chat assistant for Gary Goodwin
-          </p>
+    <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-8">
+        <%!-- Left Column: Hero + Bike Grid --%>
+        <div class="lg:col-span-2">
+          <%!-- Hero Section --%>
+          <section class="text-center mb-16">
+            <h1 class="text-5xl sm:text-6xl font-black tracking-tight">
+              KOVE MOTO <span class="text-primary">USA</span>
+            </h1>
+            <p class="mt-4 text-lg text-base-content/60 max-w-2xl mx-auto">
+              Demo of AI chat assistant for Gary Goodwin
+            </p>
 
-          <p class="mt-4 text-lg text-base-content/60 max-w-2xl mx-auto md:hidden">
-            Click the chat icon and ask about specific bikes, comparisons, maintenance, specs, or anything else you want to know!
-          </p>
-        </section>
+            <p class="mt-4 text-lg text-base-content/60 max-w-2xl mx-auto md:hidden">
+              Click the chat icon and ask about specific bikes, comparisons, maintenance, specs, or anything else you want to know!
+            </p>
+          </section>
 
-        <%!-- Bike Grid — 2 columns --%>
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <.bike_card :for={bike <- @bikes} bike={bike} />
-        </section>
+          <%!-- Bike Grid — 2 columns --%>
+          <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <.bike_card :for={bike <- @bikes} bike={bike} />
+          </section>
+        </div>
+
+        <%!-- Right Column: Chat via ChatLive component (desktop + mobile) --%>
+        <div class="lg:col-span-1">
+          <.live_component
+            module={ChatLive}
+            id="kovy-chat"
+            chat_messages={@chat_messages}
+            chat_loading={@chat_loading}
+            chat_open={@chat_open}
+            context_label="our lineup"
+            placeholder="Ask about any Kove bike..."
+            quick_asks={[
+              %{label: "Best for beginners?", message: "Which Kove bike is best for a beginner?"},
+              %{
+                label: "Compare models",
+                message: "Compare the 450 rally street legal and 450 Rally Pro Off-road"
+              },
+              %{label: "Off-road pick?", message: "What's the best Kove for off-road riding?"}
+            ]}
+          />
+        </div>
       </div>
-
-      <%!-- Right Column: Chat via ChatLive component (desktop + mobile) --%>
-      <div class="lg:col-span-1">
-        <.live_component
-          module={ChatLive}
-          id="kovy-chat"
-          chat_messages={@chat_messages}
-          chat_loading={@chat_loading}
-          chat_open={@chat_open}
-          context_label="our lineup"
-          placeholder="Ask about any Kove bike..."
-          quick_asks={[
-            %{label: "Best for beginners?", message: "Which Kove bike is best for a beginner?"},
-            %{
-              label: "Compare models",
-              message: "Compare the 450 rally street legal and 450 Rally Pro Off-road"
-            },
-            %{label: "Off-road pick?", message: "What's the best Kove for off-road riding?"}
-          ]}
-        />
-      </div>
-    </div>
+    </Layouts.app>
     """
   end
 
