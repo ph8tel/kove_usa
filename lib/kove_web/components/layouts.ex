@@ -43,7 +43,36 @@ defmodule KoveWeb.Layouts do
         </a>
       </div>
       <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
+        <ul class="flex flex-row px-1 space-x-4 items-center">
+          <%= if @current_scope && @current_scope.user do %>
+            <li>
+              <.link navigate="/home" class="btn btn-ghost btn-sm">
+                <.icon name="hero-home" class="size-4" />
+                <span class="hidden sm:inline">My Garage</span>
+              </.link>
+            </li>
+            <li>
+              <.link navigate="/users/settings" class="btn btn-ghost btn-sm">
+                <.icon name="hero-cog-6-tooth" class="size-4" />
+              </.link>
+            </li>
+            <li>
+              <.link href="/users/log-out" method="delete" class="btn btn-ghost btn-sm">
+                <.icon name="hero-arrow-right-start-on-rectangle" class="size-4" />
+              </.link>
+            </li>
+          <% else %>
+            <li>
+              <.link navigate="/users/register" class="btn btn-primary btn-sm">
+                Register
+              </.link>
+            </li>
+            <li>
+              <.link navigate="/users/log-in" class="btn btn-ghost btn-sm">
+                Log in
+              </.link>
+            </li>
+          <% end %>
           <li>
             <.theme_toggle />
           </li>

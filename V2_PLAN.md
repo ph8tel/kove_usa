@@ -19,79 +19,17 @@
 | pgvector extension | ✅ Installed, `descriptions.embedding vector(1536)` column exists. |
 | `descriptions_without_embedding` query guard | ✅ Correctly excludes the vector column from all non-embedding queries. |
 
-### What needs fixing before V2 starts
+### Remaining issues before V2
 
-#### 1.1 Pseudo-RAG keyword matching is fragile
-
-`Prompt.relevant_bikes/2` uses `String.contains?/2` on lowercased tokens. It misses:
-- Synonyms ("adventure bike" vs "adv", "eight hundred" vs "800X")
-- Partial number matches ("500" matching both "500X" and "1000 RR" if that existed)
-- Any question that doesn't name a model ("what's your lightest bike?")
-
-**Fix:** replace with a proper vector similarity search once embeddings are populated (see §2.1).
-Until embeddings are ready, the keyword matching is acceptable as a placeholder but should not be built on further.
-
-#### 1.2 No context window management ✅ Fixed
-
-The entire `chat_history` list is serialised into every API call verbatim. `llama-3.3-70b-versatile` has a 128k-token context limit. A long session with detailed spec context in the system prompt can quietly approach this limit and then fail with a rate-limit/overflow error that surfaces as a generic error to the user.
-
-**Fix:** add a `ContextBuilder` module before V2 that enforces a token budget:
-- Approximate token count as `div(String.length(content), 4)` (conservative estimate)
-- Always keep the system prompt
-- Keep the most recent N messages that fit within a budget (e.g. 90k tokens)
-- Summarise dropped history with a single "Earlier in this conversation…" message if desired
-
-#### 1.3 `bikes_full` loaded at mount and held in socket assigns forever ✅ Fixed
-
-`StorefrontLive.mount/3` calls `Bikes.list_bikes_full/0` (all associations, every bike) and stores it in the socket. It sits in LiveView assigns for the lifetime of the socket connection, consuming memory even when the user never opens the chat. With more bikes this grows linearly.
-
-**Fix:** lazy-load `bikes_full` on first `{:chat_send, _}` event and cache it in assigns only after that point. A simple `@bikes_full_loaded` boolean assign tracks whether the fetch has happened.
-
-#### 1.4 `Order` schema is a placeholder with no `user_id`
+#### 1.1 `Order` schema is a placeholder with no `user_id`
 
 `orders` exists but has no foreign key to a user, no status lifecycle, and is wired to nothing. V2 needs a real order workflow.
-
-#### 1.5 `descriptions.embedding` is never populated
-
-The column exists but is always `nil`. The `descriptions_without_embedding` workaround in every query is a permanent band-aid unless the embeddings are generated.
 
 ---
 
 ## 2. Prerequisites — What to Build Before V2
 
-### 2.1 Populate Embeddings (True RAG)
-
-Groq has no embedding endpoint available. Uses OpenAI `text-embedding-3-small` at 768 dimensions (the `dimensions` parameter compresses the output from 1536 → 768, retaining quality while matching the current column size).
-
-**Decision:** OpenAI `text-embedding-3-small` at 768 dims. The `vector(1536)` column was migrated to `vector(768)` via migration `20260309000002`.
-
-Steps:
-1. Add `OPENAI_API_KEY` to env and `runtime.exs`.
-2. Create `Kove.KovyAssistant.Embeddings` module with `embed_text/1 :: {:ok, [float()]} | {:error, term()}`.
-3. Write a Mix task `mix kove.embed_descriptions` that:
-   - Fetches all descriptions where `embedding IS NULL`
-   - Calls `Embeddings.embed_text/1` for each body
-   - Updates the row with the returned vector
-4. Replace `Prompt.relevant_bikes/2` with `Embeddings.search_descriptions/2` that:
-   - Embeds the user query
-   - Runs `SELECT bike_id FROM descriptions ORDER BY embedding <=> $1 LIMIT 5`
-   - Returns the distinct bike_ids, which the prompt builder uses to select detailed context
-5. Keep `Prompt.relevant_bikes/2` as a fallback when embeddings are unavailable (dev without API key, test env).
-
-```
-# New query in Kove.Bikes
-def search_bikes_by_embedding(query_vector, limit \\ 4) do
-  from(d in Description,
-    order_by: cosine_distance(d.embedding, ^query_vector),
-    limit: ^limit,
-    select: d.bike_id,
-    distinct: true
-  )
-  |> Repo.all()
-end
-```
-
-### 2.2 Auth (phx.gen.auth)
+### 2.1 Auth (phx.gen.auth)
 
 Run `mix phx.gen.auth Accounts User users` with email/password. This generates:
 - `users` and `user_tokens` tables
@@ -100,27 +38,6 @@ Run `mix phx.gen.auth Accounts User users` with email/password. This generates:
 - `fetch_current_user` plug and `on_mount` hook
 
 **Important:** Keep the existing public routes (`/` and `/bikes/:slug`) outside any authenticated `live_session`. Only the user-specific routes (orders, garage, saved chats) require auth.
-
-### 2.3 ContextBuilder Module
-
-```
-lib/kove/kovy_assistant/context_builder.ex
-```
-
-```elixir
-defmodule Kove.KovyAssistant.ContextBuilder do
-  @token_budget 90_000
-  @approx_chars_per_token 4
-
-  def trim_history(system_prompt, history) do
-    budget = @token_budget - estimate_tokens(system_prompt)
-    trim_to_budget(Enum.reverse(history), budget, [])
-  end
-
-  defp estimate_tokens(text), do: div(String.length(text), @approx_chars_per_token)
-  ...
-end
-```
 
 ---
 
@@ -375,13 +292,6 @@ end
 Doing these out of order creates rework. Suggested sequence:
 
 ```
-Phase 0 — Foundation fixes (do before anything else)
-  [x] ContextBuilder — token budget trimming
-  [x] Lazy-load bikes_full in StorefrontLive
-  [x] Rate limiting — IP-based, two tiers (public/authenticated)
-  [x] Populate embeddings (Mix task + OpenAI embed API) — run `mix kove.embed_descriptions` after adding OPENAI_API_KEY to .env
-  [x] Replace keyword matching with vector search
-
 Phase 1 — Auth & User model
   [ ] mix phx.gen.auth Accounts User users
   [ ] Add user_id to existing Order schema + status lifecycle
@@ -415,12 +325,10 @@ Phase 4 — UX
 
 ## 6. Open Questions to Decide Early
 
-1. **Embedding provider:** Groq (free, `nomic-embed-text-v1.5`, 768-dim → need schema migration) vs OpenAI (`text-embedding-3-small`, 1536-dim → fits existing column). Recommend OpenAI to avoid the migration.
+1. **Session auto-title:** Generate a session title from the first user message using a cheap sync Groq call, or just use the first 60 characters of the message? The sync call is cleaner UX but adds latency.
 
-2. **Session auto-title:** Generate a session title from the first user message using a cheap sync Groq call, or just use the first 60 characters of the message? The sync call is cleaner UX but adds latency.
+2. **Anonymous chat persistence:** Should we persist anonymous sessions keyed by a browser cookie/fingerprint, then merge them on sign-up? Common pattern but adds complexity. Simpler option: don't persist anonymous sessions, show a "sign in to save your chat history" nudge.
 
-3. **Anonymous chat persistence:** Should we persist anonymous sessions keyed by a browser cookie/fingerprint, then merge them on sign-up? Common pattern but adds complexity. Simpler option: don't persist anonymous sessions, show a "sign in to save your chat history" nudge.
+3. **Tool call streaming UX:** When Kovy is executing a tool, the user sees the loading spinner but nothing else. Consider sending a `{:kovy_status, "Looking up your order…"}` message type so the UI can show "Checking order status…" text while the tool runs.
 
-4. **Tool call streaming UX:** When Kovy is executing a tool, the user sees the loading spinner but nothing else. Consider sending a `{:kovy_status, "Looking up your order…"}` message type so the UI can show "Checking order status…" text while the tool runs.
-
-5. **`recommend_parts` data source:** Does a real parts catalog exist, or is this the LLM generating recommendations from training data plus bike context? If the latter, the "tool" is really just a prompt augmentation and doesn't need to be a tool call — it can just be a section in the system prompt. A real tool is only warranted when there's a live data source to query.
+4. **`recommend_parts` data source:** Does a real parts catalog exist, or is this the LLM generating recommendations from training data plus bike context? If the latter, the "tool" is really just a prompt augmentation and doesn't need to be a tool call — it can just be a section in the system prompt. A real tool is only warranted when there's a live data source to query.

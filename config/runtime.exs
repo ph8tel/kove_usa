@@ -163,3 +163,40 @@ openai_key =
 if openai_key do
   config :kove, :openai_api_key, openai_key
 end
+
+# Load Cloudflare R2 storage credentials — from env vars, or fall back to ../.env file
+env_path = Path.expand("../.env", __DIR__)
+
+env_vars =
+  if File.exists?(env_path) do
+    env_path
+    |> File.read!()
+    |> String.split("\n", trim: true)
+    |> Enum.reduce(%{}, fn line, acc ->
+      case String.split(line, "=", parts: 2) do
+        [key, val] -> Map.put(acc, String.trim(key), String.trim(val))
+        _ -> acc
+      end
+    end)
+  else
+    %{}
+  end
+
+r2_account_id = System.get_env("R2_ACCOUNT_ID") || env_vars["R2_ACCOUNT_ID"]
+r2_access_key_id = System.get_env("R2_ACCESS_KEY_ID") || env_vars["R2_ACCESS_KEY_ID"]
+r2_secret_access_key = System.get_env("R2_SECRET_ACCESS_KEY") || env_vars["R2_SECRET_ACCESS_KEY"]
+r2_bucket = System.get_env("R2_BUCKET") || env_vars["R2_BUCKET"]
+r2_public_url = System.get_env("R2_PUBLIC_URL") || env_vars["R2_PUBLIC_URL"]
+
+if r2_account_id && r2_access_key_id && r2_secret_access_key do
+  config :kove, Kove.Storage,
+    enabled: true,
+    endpoint: "https://#{r2_account_id}.r2.cloudflarestorage.com",
+    bucket: r2_bucket || "kove-uploads",
+    access_key_id: r2_access_key_id,
+    secret_access_key: r2_secret_access_key,
+    public_url:
+      r2_public_url ||
+        "https://#{r2_account_id}.r2.cloudflarestorage.com/#{r2_bucket || "kove-uploads"}",
+    region: "auto"
+end

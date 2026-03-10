@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :kove, :scopes,
+  user: [
+    default: true,
+    module: Kove.Accounts.Scope,
+    assign_key: :current_scope,
+    access_path: [:user, :id],
+    schema_key: :user_id,
+    schema_type: :id,
+    schema_table: :users,
+    test_data_fixture: Kove.AccountsFixtures,
+    test_setup_helper: :register_and_log_in_user
+  ]
+
 config :kove,
   ecto_repos: [Kove.Repo],
   generators: [timestamp_type: :utc_datetime]
@@ -58,6 +71,9 @@ config :tailwind,
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
+
+# Cloudflare R2 storage — disabled by default, enabled in runtime.exs when env vars present
+config :kove, Kove.Storage, enabled: false
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason

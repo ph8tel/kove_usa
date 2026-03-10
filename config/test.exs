@@ -1,5 +1,8 @@
 import Config
 
+# Only in tests, remove the complexity from the password hashing algorithm
+config :bcrypt_elixir, :log_rounds, 1
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used
@@ -32,6 +35,9 @@ config :kove, :groq_module, Kove.KovyAssistant.GroqMock
 # Disable rate limiting in tests — all test connections share 127.0.0.1 as peer
 # IP, causing unrelated tests to trip each other's rate limits.
 config :kove, :rate_limiter_enabled, false
+
+# Disable R2 storage in tests — uploads return placeholder URLs
+config :kove, Kove.Storage, enabled: false
 
 # Print only warnings and errors during test
 config :logger, level: :warning
