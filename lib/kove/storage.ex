@@ -33,7 +33,10 @@ defmodule Kove.Storage do
     require Logger
 
     if config[:enabled] do
-      Logger.info("R2 upload: key=#{object_key} bucket=#{config[:bucket]} endpoint=#{config[:endpoint]}")
+      Logger.info(
+        "R2 upload: key=#{object_key} bucket=#{config[:bucket]} endpoint=#{config[:endpoint]}"
+      )
+
       body = File.read!(file_path)
       url = endpoint_url(config, object_key)
 

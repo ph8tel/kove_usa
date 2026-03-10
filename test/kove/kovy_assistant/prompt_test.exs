@@ -237,6 +237,65 @@ defmodule Kove.KovyAssistant.PromptTest do
       assert prompt =~ "do not invent data"
       assert prompt =~ "concise"
     end
+
+    test "includes rider mods section when mods provided" do
+      mods = [
+        %Kove.UserBikes.UserBikeMod{
+          mod_type: :exhaust,
+          description: "Full titanium closed-course system",
+          brand: "Akrapovič",
+          cost_cents: 189_900,
+          rating: 5,
+          installed_at: ~D[2026-01-15],
+          position: 0
+        },
+        %Kove.UserBikes.UserBikeMod{
+          mod_type: :gearing,
+          description: "51-tooth rear sprocket for off-road",
+          brand: nil,
+          cost_cents: 4500,
+          rating: nil,
+          installed_at: nil,
+          position: 1
+        }
+      ]
+
+      prompt = Prompt.build_system_prompt(build_bike(), mods)
+
+      assert prompt =~ "=== RIDER MODIFICATIONS ==="
+      assert prompt =~ "Exhaust"
+      assert prompt =~ "Akrapovič"
+      assert prompt =~ "Full titanium closed-course system"
+      assert prompt =~ "$1899.00"
+      assert prompt =~ "5/5 stars"
+      assert prompt =~ "Gearing"
+      assert prompt =~ "51-tooth rear sprocket"
+    end
+
+    test "excludes rider mods section when mods is empty" do
+      prompt = Prompt.build_system_prompt(build_bike(), [])
+      refute prompt =~ "RIDER MODIFICATIONS"
+    end
+
+    test "excludes rider mods section when mods is nil" do
+      prompt = Prompt.build_system_prompt(build_bike(), nil)
+      refute prompt =~ "RIDER MODIFICATIONS"
+    end
+
+    test "includes mods-aware rule when mods are present" do
+      mod = %Kove.UserBikes.UserBikeMod{
+        mod_type: :exhaust,
+        description: "Full system",
+        brand: nil,
+        cost_cents: nil,
+        rating: nil,
+        installed_at: nil,
+        position: 0
+      }
+
+      prompt = Prompt.build_system_prompt(build_bike(), [mod])
+      assert prompt =~ "consider their modifications"
+    end
   end
 
   # ── Catalog prompt tests ─────────────────────────────────────────────

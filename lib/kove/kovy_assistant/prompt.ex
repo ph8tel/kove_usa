@@ -9,8 +9,14 @@ defmodule Kove.KovyAssistant.Prompt do
 
   @doc """
   Returns the full system‑prompt string for a conversation about `bike`.
+
+  When `rider_mods` is provided (a list of `UserBikeMod` structs), their
+  details are appended as a RIDER MODIFICATIONS section so Kovy can reference
+  what the owner has actually changed on their bike.
   """
-  def build_system_prompt(bike) do
+  def build_system_prompt(bike, rider_mods \\ []) do
+    mods_section = rider_mods_section(rider_mods)
+
     """
     You are Kovy, the Kove Moto USA bike assistant. You're knowledgeable, \
     technical, and honest — like a well‑informed friend at the dealership who \
@@ -27,6 +33,7 @@ defmodule Kove.KovyAssistant.Prompt do
 
     CURRENT BIKE CONTEXT:
     #{bike_context(bike)}
+    #{mods_section}
 
     RULES:
     - Ground your answers in the specs and descriptions above — do not invent data
@@ -37,6 +44,7 @@ defmodule Kove.KovyAssistant.Prompt do
     - For upgrades: suggest what riders actually do (protection, ergonomics, suspension tuning)
     - For comparisons: use specific numbers (displacement, weight, travel, price)
     - Never claim Kove is "better" without backing it up with specs
+    #{if mods_section != "", do: "- When answering about this rider's bike, consider their modifications and how they affect performance, maintenance, and compatibility with further upgrades", else: ""}
 
     SECURITY:
     - You are ONLY permitted to discuss motorcycles, powersports, riding, \
@@ -343,6 +351,40 @@ defmodule Kove.KovyAssistant.Prompt do
       |> Enum.join("\n\n")
 
     "=== MARKETING DESCRIPTIONS ===\n#{text}"
+  end
+
+  # ── Rider Mods ──
+
+  defp rider_mods_section(nil), do: ""
+  defp rider_mods_section([]), do: ""
+
+  defp rider_mods_section(mods) when is_list(mods) do
+    items =
+      mods
+      |> Enum.sort_by(& &1.position)
+      |> Enum.map(fn mod ->
+        type_label =
+          Kove.UserBikes.UserBikeMod.mod_type_label(mod.mod_type)
+
+        parts =
+          [
+            type_label,
+            if(mod.brand, do: "(#{mod.brand})"),
+            "— #{mod.description}",
+            if(mod.cost_cents,
+              do: "[$#{:erlang.float_to_binary(mod.cost_cents / 100, decimals: 2)}]"
+            ),
+            if(mod.rating, do: "#{mod.rating}/5 stars"),
+            if(mod.installed_at, do: "installed #{mod.installed_at}")
+          ]
+          |> Enum.reject(&is_nil/1)
+          |> Enum.join(" ")
+
+        "- #{parts}"
+      end)
+      |> Enum.join("\n")
+
+    "\n=== RIDER MODIFICATIONS ===\n#{items}"
   end
 
   # ── Formatting ──

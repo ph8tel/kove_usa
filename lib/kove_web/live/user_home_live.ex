@@ -5,6 +5,7 @@ defmodule KoveWeb.UserHomeLive do
 
   alias Kove.Bikes
   alias Kove.UserBikes
+  alias Kove.UserBikes.UserBikeMod
   alias Kove.KovyAssistant
   alias KoveWeb.ChatLive
 
@@ -29,7 +30,9 @@ defmodule KoveWeb.UserHomeLive do
      |> assign(:user_bike, user_bike)
      |> assign(:bike, bike)
      |> assign(:hero_slides, hero_slides)
-     |> assign(:active_tab, :my_bike)
+     |> assign(:active_tab, :my_mods)
+     |> assign(:mod_form, to_form(UserBikes.change_mod(%UserBikeMod{}), as: :mod))
+     |> assign(:mod_rating, nil)
      |> assign(:rate_limit_key, rate_limit_key)
      |> assign(:chat_messages, [])
      |> assign(:chat_loading, false)
@@ -149,11 +152,11 @@ defmodule KoveWeb.UserHomeLive do
           <div class="tabs tabs-bordered mb-6 gap-2">
             <button
               phx-click="set_tab"
-              phx-value-tab="my_bike"
-              class={["tab", @active_tab == :my_bike && "tab-active"]}
+              phx-value-tab="my_mods"
+              class={["tab", @active_tab == :my_mods && "tab-active"]}
             >
-              <.icon name="hero-truck" class="size-5" />
-              <span class="hidden sm:inline ml-2">My Bike</span>
+              <.icon name="hero-wrench" class="size-5" />
+              <span class="hidden sm:inline ml-2">My Mods</span>
             </button>
             <button
               phx-click="set_tab"
@@ -183,10 +186,10 @@ defmodule KoveWeb.UserHomeLive do
 
           <%!-- Content Area --%>
           <div class="bg-base-200 rounded-lg p-6 min-h-64">
-            <%!-- My Bike Tab --%>
-            <div :if={@active_tab == :my_bike}>
+            <%!-- My Mods Tab --%>
+            <div :if={@active_tab == :my_mods}>
               <%= if @bike do %>
-                <.bike_details_section bike={@bike} user_bike={@user_bike} />
+                <.mods_section user_bike={@user_bike} mod_form={@mod_form} mod_rating={@mod_rating} />
               <% else %>
                 <.no_bike_section />
               <% end %>
@@ -231,50 +234,167 @@ defmodule KoveWeb.UserHomeLive do
 
   # ── Sub-components ──
 
-  attr :bike, :map, required: true
   attr :user_bike, :map, required: true
+  attr :mod_form, :map, required: true
+  attr :mod_rating, :integer, default: nil
 
-  defp bike_details_section(assigns) do
+  defp mods_section(assigns) do
+    mods =
+      case assigns.user_bike do
+        %{mods: mods} when is_list(mods) -> mods
+        _ -> []
+      end
+
+    assigns = assign(assigns, :mods, mods)
+
     ~H"""
     <div class="space-y-6">
-      <h3 class="text-lg font-bold">Bike Specs</h3>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="stat bg-base-100 rounded-lg">
-          <div class="stat-title">Model</div>
-          <div class="stat-value text-lg">{@bike.name}</div>
-        </div>
-        <div class="stat bg-base-100 rounded-lg">
-          <div class="stat-title">Year</div>
-          <div class="stat-value text-lg">{@bike.year}</div>
-        </div>
-        <div class="stat bg-base-100 rounded-lg">
-          <div class="stat-title">Category</div>
-          <div class="stat-value text-lg">{Kove.Bikes.category_label(@bike.category)}</div>
-        </div>
-        <div :if={@bike.engine} class="stat bg-base-100 rounded-lg">
-          <div class="stat-title">Engine</div>
-          <div class="stat-value text-lg">{@bike.engine.displacement} {@bike.engine.engine_type}</div>
-        </div>
-        <div class="stat bg-base-100 rounded-lg">
-          <div class="stat-title">MSRP</div>
-          <div class="stat-value text-lg text-primary">
-            {Kove.Bikes.format_msrp(@bike.msrp_cents)}
-          </div>
-        </div>
-        <div class="stat bg-base-100 rounded-lg">
-          <div class="stat-title">Status</div>
-          <div class="stat-value text-lg">{Kove.Bikes.status_label(@bike.status)}</div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="flex items-center gap-4">
-        <.link navigate={~p"/bikes/#{@bike.slug}"} class="btn btn-primary btn-sm">
-          <.icon name="hero-arrow-right" class="size-4" /> View Full Details
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold">My Mods</h3>
+        <.link navigate={~p"/bikes/#{@user_bike.bike.slug}"} class="btn btn-ghost btn-xs">
+          <.icon name="hero-arrow-right" class="size-4" /> View Full Specs
         </.link>
       </div>
+
+      <%!-- Add Mod Form --%>
+      <.form
+        for={@mod_form}
+        id="mod-form"
+        phx-submit="save-mod"
+        phx-change="validate-mod"
+        class="card bg-base-100 p-4"
+      >
+        <h4 class="font-semibold mb-3">Add a Mod</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <.input
+            field={@mod_form[:mod_type]}
+            type="select"
+            label="Type *"
+            prompt="Select type..."
+            options={Enum.map(UserBikeMod.mod_types(), &{UserBikeMod.mod_type_label(&1), &1})}
+          />
+          <.input
+            field={@mod_form[:brand]}
+            type="text"
+            label="Brand"
+            placeholder="e.g. Akrapovič, Rekluse"
+          />
+        </div>
+
+        <div class="mt-3">
+          <.input
+            field={@mod_form[:description]}
+            type="textarea"
+            label="Description *"
+            placeholder="What did you change and why?"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+          <div>
+            <label class="label mb-1">Cost ($)</label>
+            <input
+              type="number"
+              name="mod[cost_dollars]"
+              id="mod_cost_dollars"
+              value={Phoenix.HTML.Form.input_value(@mod_form, :cost_dollars)}
+              placeholder="e.g. 899.00"
+              step="0.01"
+              min="0"
+              class="input w-full"
+            />
+          </div>
+          <.input field={@mod_form[:installed_at]} type="date" label="Installed" />
+          <div>
+            <label class="label mb-1">Rating</label>
+            <input type="hidden" name="mod[rating]" value={@mod_rating || ""} />
+            <div class="flex items-center gap-1 mt-1">
+              <%= for star <- 1..5 do %>
+                <button
+                  type="button"
+                  phx-click="set-mod-rating"
+                  phx-value-rating={star}
+                  class={[
+                    "text-2xl cursor-pointer transition-colors hover:scale-110",
+                    if(@mod_rating && star <= @mod_rating,
+                      do: "text-warning",
+                      else: "text-base-content/20"
+                    )
+                  ]}
+                >
+                  ★
+                </button>
+              <% end %>
+              <%= if @mod_rating do %>
+                <button
+                  type="button"
+                  phx-click="set-mod-rating"
+                  phx-value-rating="0"
+                  class="btn btn-ghost btn-xs ml-1"
+                >
+                  <.icon name="hero-x-mark" class="size-3" />
+                </button>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <.icon name="hero-plus" class="size-4" /> Add Mod
+          </button>
+        </div>
+      </.form>
+
+      <%!-- Mods List --%>
+      <%= if @mods != [] do %>
+        <div class="space-y-3">
+          <%= for mod <- @mods do %>
+            <div id={"mod-#{mod.id}"} class="card bg-base-100 p-4">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="badge badge-primary badge-sm">
+                      {UserBikeMod.mod_type_label(mod.mod_type)}
+                    </span>
+                    <%= if mod.brand do %>
+                      <span class="badge badge-ghost badge-sm">{mod.brand}</span>
+                    <% end %>
+                    <%= if mod.rating do %>
+                      <span class="text-warning text-sm">
+                        {String.duplicate("★", mod.rating)}{String.duplicate("☆", 5 - mod.rating)}
+                      </span>
+                    <% end %>
+                  </div>
+                  <p class="mt-1 text-sm">{mod.description}</p>
+                  <div class="flex items-center gap-3 mt-2 text-xs text-base-content/50">
+                    <%= if mod.cost_cents do %>
+                      <span>{"$#{:erlang.float_to_binary(mod.cost_cents / 100, decimals: 2)}"}</span>
+                    <% end %>
+                    <%= if mod.installed_at do %>
+                      <span>Installed {Calendar.strftime(mod.installed_at, "%b %d, %Y")}</span>
+                    <% end %>
+                  </div>
+                </div>
+                <button
+                  phx-click="delete-mod"
+                  phx-value-id={mod.id}
+                  data-confirm="Remove this mod?"
+                  class="btn btn-ghost btn-xs btn-circle shrink-0"
+                >
+                  <.icon name="hero-trash" class="size-4 text-error" />
+                </button>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-4">
+          <p class="text-base-content/50 text-sm">
+            No mods yet — add your first modification above!
+          </p>
+        </div>
+      <% end %>
     </div>
     """
   end
@@ -447,8 +567,7 @@ defmodule KoveWeb.UserHomeLive do
             <.live_file_input upload={@uploads.bike_photo} class="hidden" />
 
             <button type="submit" class="btn btn-primary btn-sm mt-4">
-              <.icon name="hero-cloud-arrow-up" class="size-4" />
-              Upload Photo
+              <.icon name="hero-cloud-arrow-up" class="size-4" /> Upload Photo
             </button>
           <% end %>
         </div>
@@ -577,6 +696,77 @@ defmodule KoveWeb.UserHomeLive do
     {:noreply, socket}
   end
 
+  # ── Mod events ──
+
+  def handle_event("set-mod-rating", %{"rating" => rating_str}, socket) do
+    rating =
+      case Integer.parse(rating_str) do
+        {0, _} -> nil
+        {n, _} when n >= 1 and n <= 5 -> n
+        _ -> nil
+      end
+
+    {:noreply, assign(socket, :mod_rating, rating)}
+  end
+
+  def handle_event("validate-mod", %{"mod" => mod_params}, socket) do
+    mod_params = convert_dollars_to_cents(mod_params)
+
+    changeset =
+      %UserBikeMod{}
+      |> UserBikeMod.changeset(mod_params)
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign(socket, :mod_form, to_form(changeset, as: :mod))}
+  end
+
+  def handle_event("save-mod", %{"mod" => mod_params}, socket) do
+    user = socket.assigns.user
+
+    # Ensure user_bike exists
+    user_bike =
+      case socket.assigns.user_bike do
+        nil ->
+          {:ok, ub} = UserBikes.create_user_bike(user, %{})
+          ub
+
+        ub ->
+          ub
+      end
+
+    mod_params = convert_dollars_to_cents(mod_params)
+
+    case UserBikes.add_mod(user_bike, mod_params) do
+      {:ok, _mod} ->
+        user_bike = UserBikes.get_user_bike(user)
+
+        {:noreply,
+         socket
+         |> assign(:user_bike, user_bike)
+         |> assign(:mod_form, to_form(UserBikes.change_mod(%UserBikeMod{}), as: :mod))
+         |> assign(:mod_rating, nil)
+         |> put_flash(:info, "Mod added!")}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :mod_form, to_form(changeset, as: :mod))}
+    end
+  end
+
+  def handle_event("delete-mod", %{"id" => id}, socket) do
+    case UserBikes.delete_mod(id) do
+      {:ok, _mod} ->
+        user_bike = UserBikes.get_user_bike(socket.assigns.user)
+
+        {:noreply,
+         socket
+         |> assign(:user_bike, user_bike)
+         |> put_flash(:info, "Mod removed.")}
+
+      {:error, _reason} ->
+        {:noreply, put_flash(socket, :error, "Could not remove mod.")}
+    end
+  end
+
   # ── Photo upload (form-based, matches registration pattern) ──
 
   def handle_event("save-photo", _params, socket) do
@@ -641,7 +831,13 @@ defmodule KoveWeb.UserHomeLive do
       user_msg = %{role: :user, content: message}
       assistant_msg = %{role: :assistant, content: "", streaming: true}
       history = socket.assigns.chat_messages ++ [user_msg]
-      context = %{tier: :public, rate_limit_key: socket.assigns.rate_limit_key}
+      rider_mods = get_rider_mods(socket.assigns.user_bike)
+
+      context = %{
+        tier: :public,
+        rate_limit_key: socket.assigns.rate_limit_key,
+        rider_mods: rider_mods
+      }
 
       if socket.assigns.bike do
         KovyAssistant.send_message(socket.assigns.bike, history, self(), context)
@@ -665,7 +861,13 @@ defmodule KoveWeb.UserHomeLive do
     else
       history = List.delete_at(socket.assigns.chat_messages, -1)
       assistant_msg = %{role: :assistant, content: "", streaming: true}
-      context = %{tier: :public, rate_limit_key: socket.assigns.rate_limit_key}
+      rider_mods = get_rider_mods(socket.assigns.user_bike)
+
+      context = %{
+        tier: :public,
+        rate_limit_key: socket.assigns.rate_limit_key,
+        rider_mods: rider_mods
+      }
 
       if socket.assigns.bike do
         KovyAssistant.send_message(socket.assigns.bike, history, self(), context)
@@ -697,6 +899,35 @@ defmodule KoveWeb.UserHomeLive do
   @impl true
   def handle_info({:kovy_error, reason}, socket) when is_binary(reason),
     do: handle_kovy_error(socket, reason)
+
+  # ── Rider mods helper ──
+
+  defp get_rider_mods(nil), do: []
+
+  defp get_rider_mods(%{mods: mods}) when is_list(mods), do: mods
+
+  defp get_rider_mods(_), do: []
+
+  # Convert the user-facing "cost_dollars" field to "cost_cents" for the DB.
+  # Removes the "cost_dollars" key so it doesn't confuse the changeset.
+  defp convert_dollars_to_cents(params) do
+    case Map.pop(params, "cost_dollars") do
+      {nil, params} ->
+        params
+
+      {"", params} ->
+        Map.delete(params, "cost_cents")
+
+      {dollars_str, params} ->
+        case Float.parse(dollars_str) do
+          {dollars, _} ->
+            Map.put(params, "cost_cents", round(dollars * 100))
+
+          :error ->
+            params
+        end
+    end
+  end
 
   # ── Upload helpers ──
 

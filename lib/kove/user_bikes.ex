@@ -7,6 +7,7 @@ defmodule Kove.UserBikes do
   alias Kove.Repo
   alias Kove.UserBikes.UserBike
   alias Kove.UserBikes.UserBikeImage
+  alias Kove.UserBikes.UserBikeMod
 
   @doc """
   Returns the user_bike for a given user, preloading the bike and its associations
@@ -15,12 +16,14 @@ defmodule Kove.UserBikes do
   """
   def get_user_bike(user) do
     images_query = from(i in UserBikeImage, order_by: [asc: i.position])
+    mods_query = from(m in UserBikeMod, order_by: [asc: m.position])
 
     UserBike
     |> where(user_id: ^user.id)
     |> preload([
       :user,
       images: ^images_query,
+      mods: ^mods_query,
       bike: [:engine, :images, :chassis_spec, :dimension, :bike_features, :descriptions]
     ])
     |> Repo.one()
@@ -94,6 +97,60 @@ defmodule Kove.UserBikes do
     |> where(user_bike_id: ^user_bike.id)
     |> order_by(asc: :position)
     |> Repo.all()
+  end
+
+  # ── Mod management ──
+
+  @doc """
+  Adds a mod to a user_bike. Sets position to the next available slot.
+  """
+  def add_mod(%UserBike{} = user_bike, attrs) do
+    next_position =
+      UserBikeMod
+      |> where(user_bike_id: ^user_bike.id)
+      |> select([m], coalesce(max(m.position), -1) + 1)
+      |> Repo.one()
+
+    %UserBikeMod{}
+    |> UserBikeMod.changeset(Map.put(attrs, "position", next_position))
+    |> Ecto.Changeset.put_change(:user_bike_id, user_bike.id)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates an existing mod.
+  """
+  def update_mod(%UserBikeMod{} = mod, attrs) do
+    mod
+    |> UserBikeMod.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a mod by ID.
+  """
+  def delete_mod(mod_id) do
+    case Repo.get(UserBikeMod, mod_id) do
+      nil -> {:error, :not_found}
+      mod -> Repo.delete(mod)
+    end
+  end
+
+  @doc """
+  Lists all mods for a user_bike, ordered by position.
+  """
+  def list_mods(%UserBike{} = user_bike) do
+    UserBikeMod
+    |> where(user_bike_id: ^user_bike.id)
+    |> order_by(asc: :position)
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns a changeset for tracking mod changes.
+  """
+  def change_mod(%UserBikeMod{} = mod, attrs \\ %{}) do
+    UserBikeMod.changeset(mod, attrs)
   end
 
   # Treat empty-string bike_id as nil (the "None" option)

@@ -9,6 +9,7 @@ defmodule Kove.UserBikes.UserBike do
     belongs_to :user, Kove.Accounts.User
     belongs_to :bike, Kove.Bikes.Bike
     has_many :images, Kove.UserBikes.UserBikeImage
+    has_many :mods, Kove.UserBikes.UserBikeMod
 
     timestamps(type: :utc_datetime)
   end
