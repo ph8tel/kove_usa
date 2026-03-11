@@ -83,6 +83,7 @@ defmodule Kove.KovyAssistant do
     tier = Map.get(context, :tier, :public)
     rate_limit_key = Map.get(context, :rate_limit_key)
     rider_mods = Map.get(context, :rider_mods, [])
+    user_orders = Map.get(context, :user_orders, [])
 
     Logger.info("KovyAssistant: starting chat for bike",
       bike: bike.name,
@@ -103,7 +104,7 @@ defmodule Kove.KovyAssistant do
             |> InputSanitizer.sanitize_history()
             |> ContextBuilder.trim_history(tier)
 
-          system_prompt = Prompt.build_system_prompt(bike, rider_mods)
+          system_prompt = Prompt.build_system_prompt(bike, rider_mods, user_orders)
 
           api_messages =
             [

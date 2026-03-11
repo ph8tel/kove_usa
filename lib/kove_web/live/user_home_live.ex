@@ -6,6 +6,8 @@ defmodule KoveWeb.UserHomeLive do
   alias Kove.Bikes
   alias Kove.UserBikes
   alias Kove.UserBikes.UserBikeMod
+  alias Kove.Parts
+  alias Kove.Orders
   alias Kove.KovyAssistant
   alias KoveWeb.ChatLive
 
@@ -16,6 +18,11 @@ defmodule KoveWeb.UserHomeLive do
     bike = if user_bike, do: user_bike.bike, else: nil
 
     hero_slides = build_hero_slides(user_bike, bike)
+
+    oil_change_kit = if bike, do: Parts.oil_change_kit_for_bike(bike), else: nil
+    cart_count = Orders.cart_item_count(user)
+    user_orders = Orders.list_user_orders(user)
+    cart = Orders.get_cart(user)
 
     rate_limit_key =
       case get_connect_info(socket, :peer_data) do
@@ -31,6 +38,10 @@ defmodule KoveWeb.UserHomeLive do
      |> assign(:bike, bike)
      |> assign(:hero_slides, hero_slides)
      |> assign(:active_tab, :my_mods)
+     |> assign(:oil_change_kit, oil_change_kit)
+     |> assign(:cart_count, cart_count)
+     |> assign(:cart, cart)
+     |> assign(:user_orders, user_orders)
      |> assign(:mod_form, to_form(UserBikes.change_mod(%UserBikeMod{}), as: :mod))
      |> assign(:mod_rating, nil)
      |> assign(:rate_limit_key, rate_limit_key)
@@ -181,6 +192,13 @@ defmodule KoveWeb.UserHomeLive do
             >
               <.icon name="hero-shopping-bag" class="size-5" />
               <span class="hidden sm:inline ml-2">Orders</span>
+              <span
+                :if={@cart_count > 0}
+                id="cart-badge"
+                class="badge badge-primary badge-xs ml-1"
+              >
+                {@cart_count}
+              </span>
             </button>
           </div>
 
@@ -202,12 +220,12 @@ defmodule KoveWeb.UserHomeLive do
 
             <%!-- Maintenance Tab --%>
             <div :if={@active_tab == :maintenance}>
-              <.maintenance_section bike={@bike} />
+              <.maintenance_section bike={@bike} oil_change_kit={@oil_change_kit} />
             </div>
 
             <%!-- Orders Tab --%>
             <div :if={@active_tab == :orders}>
-              <.orders_section />
+              <.orders_section cart={@cart} user_orders={@user_orders} />
             </div>
           </div>
         </div>
@@ -224,7 +242,7 @@ defmodule KoveWeb.UserHomeLive do
             placeholder={
               if @bike, do: "Ask about your #{@bike.name}...", else: "Ask about any Kove bike..."
             }
-            quick_asks={quick_asks(@bike)}
+            quick_asks={quick_asks_with_orders(@bike, @user_orders)}
           />
         </div>
       </div>
@@ -415,6 +433,7 @@ defmodule KoveWeb.UserHomeLive do
   end
 
   attr :bike, :map, default: nil
+  attr :oil_change_kit, :map, default: nil
 
   defp maintenance_section(assigns) do
     ~H"""
@@ -422,25 +441,41 @@ defmodule KoveWeb.UserHomeLive do
       <h3 class="text-lg font-bold">Maintenance Schedule</h3>
 
       <%= if @bike do %>
-        <div class="alert alert-info">
-          <.icon name="hero-information-circle" class="size-5" />
-          <span>
-            Maintenance tracking is coming soon! Ask Kovy about maintenance tips for your {@bike.name} in the meantime.
-          </span>
-        </div>
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="card bg-base-100 p-4">
+          <%!-- Oil Change Kit — live card with "Add to Cart" --%>
+          <div id="oil-change-card" class="card bg-base-100 p-4">
             <div class="flex items-center gap-3">
               <div class="size-10 rounded-full bg-warning/20 flex items-center justify-center">
                 <.icon name="hero-wrench" class="size-5 text-warning" />
               </div>
-              <div>
+              <div class="flex-1">
                 <p class="font-semibold">Oil Change</p>
                 <p class="text-sm text-base-content/60">Every 3,000 km</p>
               </div>
             </div>
+            <%= if @oil_change_kit do %>
+              <div class="mt-3 flex items-center justify-between">
+                <div>
+                  <p class="text-xs text-base-content/60">{@oil_change_kit.name}</p>
+                  <p class="font-bold text-primary">
+                    {Kove.Currency.format(@oil_change_kit.price_cents)}
+                  </p>
+                </div>
+                <button
+                  id="add-oil-change-kit"
+                  phx-click="add-to-cart"
+                  phx-value-kit-id={@oil_change_kit.id}
+                  class="btn btn-primary btn-sm"
+                >
+                  <.icon name="hero-shopping-cart" class="size-4" /> Add to Cart
+                </button>
+              </div>
+            <% else %>
+              <p class="mt-3 text-xs text-base-content/50">Kit coming soon for your engine.</p>
+            <% end %>
           </div>
+
+          <%!-- Air Filter — static placeholder --%>
           <div class="card bg-base-100 p-4">
             <div class="flex items-center gap-3">
               <div class="size-10 rounded-full bg-error/20 flex items-center justify-center">
@@ -451,7 +486,10 @@ defmodule KoveWeb.UserHomeLive do
                 <p class="text-sm text-base-content/60">Every 6,000 km</p>
               </div>
             </div>
+            <p class="mt-3 text-xs text-base-content/50">Kit coming soon.</p>
           </div>
+
+          <%!-- Chain & Sprockets — static placeholder --%>
           <div class="card bg-base-100 p-4">
             <div class="flex items-center gap-3">
               <div class="size-10 rounded-full bg-success/20 flex items-center justify-center">
@@ -462,7 +500,10 @@ defmodule KoveWeb.UserHomeLive do
                 <p class="text-sm text-base-content/60">Every 10,000 km</p>
               </div>
             </div>
+            <p class="mt-3 text-xs text-base-content/50">Kit coming soon.</p>
           </div>
+
+          <%!-- Valve Clearance — static placeholder --%>
           <div class="card bg-base-100 p-4">
             <div class="flex items-center gap-3">
               <div class="size-10 rounded-full bg-info/20 flex items-center justify-center">
@@ -473,6 +514,7 @@ defmodule KoveWeb.UserHomeLive do
                 <p class="text-sm text-base-content/60">Every 12,000 km</p>
               </div>
             </div>
+            <p class="mt-3 text-xs text-base-content/50">Kit coming soon.</p>
           </div>
         </div>
       <% else %>
@@ -484,14 +526,117 @@ defmodule KoveWeb.UserHomeLive do
     """
   end
 
+  attr :cart, :map, default: nil
+  attr :user_orders, :list, default: []
+
   defp orders_section(assigns) do
+    cart_items =
+      case assigns.cart do
+        %{items: items} when is_list(items) -> items
+        _ -> []
+      end
+
+    cart_total =
+      Enum.reduce(cart_items, 0, fn item, acc ->
+        acc + item.unit_price_cents * item.quantity
+      end)
+
+    assigns =
+      assigns
+      |> assign(:cart_items, cart_items)
+      |> assign(:cart_total, cart_total)
+
     ~H"""
-    <div class="space-y-4">
+    <div class="space-y-6">
       <h3 class="text-lg font-bold">My Orders</h3>
-      <div class="text-center py-8 space-y-4">
-        <.icon name="hero-shopping-bag" class="size-16 text-base-content/20 mx-auto" />
-        <p class="text-base-content/50">No orders yet. Check back soon!</p>
-      </div>
+
+      <%!-- Active Cart --%>
+      <%= if @cart_items != [] do %>
+        <div id="cart-section" class="card bg-base-100 p-4 space-y-3">
+          <div class="flex items-center gap-2 mb-2">
+            <.icon name="hero-shopping-cart" class="size-5 text-primary" />
+            <span class="font-semibold">Shopping Cart</span>
+          </div>
+
+          <div class="divide-y divide-base-300">
+            <%= for item <- @cart_items do %>
+              <div id={"cart-item-#{item.id}"} class="flex items-center justify-between py-2">
+                <div class="flex-1">
+                  <p class="font-medium">{item.name_snapshot}</p>
+                  <p class="text-sm text-base-content/60">
+                    Qty: {item.quantity} × {Kove.Currency.format(item.unit_price_cents)}
+                  </p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-bold">
+                    {Kove.Currency.format(item.unit_price_cents * item.quantity)}
+                  </span>
+                  <button
+                    phx-click="remove-cart-item"
+                    phx-value-item-id={item.id}
+                    class="btn btn-ghost btn-xs text-error"
+                  >
+                    <.icon name="hero-trash" class="size-4" />
+                  </button>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="flex items-center justify-between pt-3 border-t border-base-300">
+            <span class="font-bold text-lg">Total: {Kove.Currency.format(@cart_total)}</span>
+            <button id="place-order-btn" phx-click="place-order" class="btn btn-primary btn-sm">
+              <.icon name="hero-check" class="size-4" /> Place Order
+            </button>
+          </div>
+        </div>
+      <% end %>
+
+      <%!-- Past Orders --%>
+      <%= if @user_orders != [] do %>
+        <div class="space-y-3">
+          <%= for order <- @user_orders do %>
+            <div id={"order-#{order.id}"} class="card bg-base-100 p-4">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold">Order #{order.id}</span>
+                  <span class={[
+                    "badge badge-sm",
+                    order_status_badge_class(order.status)
+                  ]}>
+                    {String.capitalize(order.status)}
+                  </span>
+                </div>
+                <span class="text-xs text-base-content/60">
+                  {format_order_date(order.confirmed_at)}
+                </span>
+              </div>
+              <div class="space-y-1">
+                <%= for item <- order.items do %>
+                  <div class="flex justify-between text-sm">
+                    <span>{item.name_snapshot} × {item.quantity}</span>
+                    <span>{Kove.Currency.format(item.unit_price_cents * item.quantity)}</span>
+                  </div>
+                <% end %>
+              </div>
+              <div class="flex justify-end pt-2 border-t border-base-300 mt-2">
+                <span class="font-bold">
+                  {Kove.Currency.format(Kove.Orders.order_total_cents(order))}
+                </span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <%= if @cart_items == [] do %>
+          <div class="text-center py-8 space-y-4">
+            <.icon name="hero-shopping-bag" class="size-16 text-base-content/20 mx-auto" />
+            <p class="text-base-content/50">
+              No orders yet. Check the Maintenance tab to browse available kits!
+            </p>
+          </div>
+        <% end %>
+      <% end %>
     </div>
     """
   end
@@ -647,6 +792,21 @@ defmodule KoveWeb.UserHomeLive do
     end
   end
 
+  # ── Order helpers ──
+
+  defp order_status_badge_class("pending"), do: "badge-warning"
+  defp order_status_badge_class("confirmed"), do: "badge-info"
+  defp order_status_badge_class("shipped"), do: "badge-primary"
+  defp order_status_badge_class("delivered"), do: "badge-success"
+  defp order_status_badge_class("cancelled"), do: "badge-error"
+  defp order_status_badge_class(_), do: "badge-ghost"
+
+  defp format_order_date(nil), do: ""
+
+  defp format_order_date(%DateTime{} = dt) do
+    Calendar.strftime(dt, "%b %d, %Y")
+  end
+
   defp quick_asks(nil) do
     [
       %{label: "Best for beginners?", message: "Which Kove bike is best for a beginner?"},
@@ -663,11 +823,100 @@ defmodule KoveWeb.UserHomeLive do
     ]
   end
 
+  defp quick_asks_with_orders(bike, user_orders) do
+    base = quick_asks(bike)
+
+    if user_orders != [] do
+      order_ask = %{
+        label: "My order status?",
+        message: "What's the status of my order?"
+      }
+
+      [order_ask | Enum.take(base, 2)]
+    else
+      base
+    end
+  end
+
   # ── Tab switching ──
 
   @impl true
   def handle_event("set_tab", %{"tab" => tab}, socket) do
     {:noreply, assign(socket, :active_tab, String.to_existing_atom(tab))}
+  end
+
+  # ── Cart events ──
+
+  def handle_event("add-to-cart", %{"kit-id" => kit_id}, socket) do
+    user = socket.assigns.user
+    kit = Parts.get_kit!(kit_id)
+
+    case Orders.add_kit_to_cart(user, kit) do
+      {:ok, _item} ->
+        cart = Orders.get_cart(user)
+        cart_count = Orders.cart_item_count(user)
+
+        {:noreply,
+         socket
+         |> assign(:cart, cart)
+         |> assign(:cart_count, cart_count)
+         |> put_flash(:info, "#{kit.name} added to cart!")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Could not add item to cart.")}
+    end
+  end
+
+  def handle_event("remove-cart-item", %{"item-id" => item_id}, socket) do
+    user = socket.assigns.user
+
+    case Orders.remove_cart_item(user, item_id) do
+      {:ok, _item} ->
+        cart = Orders.get_cart(user)
+        cart_count = Orders.cart_item_count(user)
+
+        {:noreply,
+         socket
+         |> assign(:cart, cart)
+         |> assign(:cart_count, cart_count)
+         |> put_flash(:info, "Item removed from cart.")}
+
+      {:error, _reason} ->
+        {:noreply, put_flash(socket, :error, "Could not remove item.")}
+    end
+  end
+
+  def handle_event("place-order", _params, socket) do
+    user = socket.assigns.user
+
+    attrs = %{
+      customer_name: user.email |> String.split("@") |> List.first(),
+      customer_email: user.email
+    }
+
+    case Orders.confirm_order(user, attrs) do
+      {:ok, _order} ->
+        user_orders = Orders.list_user_orders(user)
+        cart = Orders.get_cart(user)
+        cart_count = Orders.cart_item_count(user)
+
+        {:noreply,
+         socket
+         |> assign(:cart, cart)
+         |> assign(:cart_count, cart_count)
+         |> assign(:user_orders, user_orders)
+         |> assign(:active_tab, :orders)
+         |> put_flash(:info, "Order placed! We'll be in touch.")}
+
+      {:error, :empty_cart} ->
+        {:noreply, put_flash(socket, :error, "Your cart is empty.")}
+
+      {:error, :no_cart} ->
+        {:noreply, put_flash(socket, :error, "No active cart found.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Could not place order.")}
+    end
   end
 
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
@@ -836,7 +1085,8 @@ defmodule KoveWeb.UserHomeLive do
       context = %{
         tier: :public,
         rate_limit_key: socket.assigns.rate_limit_key,
-        rider_mods: rider_mods
+        rider_mods: rider_mods,
+        user_orders: socket.assigns.user_orders
       }
 
       if socket.assigns.bike do
@@ -866,7 +1116,8 @@ defmodule KoveWeb.UserHomeLive do
       context = %{
         tier: :public,
         rate_limit_key: socket.assigns.rate_limit_key,
-        rider_mods: rider_mods
+        rider_mods: rider_mods,
+        user_orders: socket.assigns.user_orders
       }
 
       if socket.assigns.bike do

@@ -296,6 +296,114 @@ defmodule Kove.KovyAssistant.PromptTest do
       prompt = Prompt.build_system_prompt(build_bike(), [mod])
       assert prompt =~ "consider their modifications"
     end
+
+    test "includes rider orders section when orders provided" do
+      orders = [
+        %Kove.Orders.Order{
+          id: 42,
+          status: "pending",
+          customer_name: "Alex Rider",
+          tracking_number: nil,
+          inserted_at: ~U[2026-03-10 14:30:00Z],
+          items: [
+            %Kove.Orders.OrderItem{
+              name_snapshot: "800X Oil Change Kit",
+              quantity: 1,
+              unit_price_cents: 6499
+            }
+          ]
+        }
+      ]
+
+      prompt = Prompt.build_system_prompt(build_bike(), [], orders)
+
+      assert prompt =~ "=== RIDER ORDERS ==="
+      assert prompt =~ "Order #42"
+      assert prompt =~ "Status: pending"
+      assert prompt =~ "800X Oil Change Kit × 1"
+      assert prompt =~ "$64.99"
+      assert prompt =~ "Mar 10, 2026"
+      assert prompt =~ "Name: Alex Rider"
+    end
+
+    test "includes tracking number when present on order" do
+      orders = [
+        %Kove.Orders.Order{
+          id: 55,
+          status: "shipped",
+          customer_name: "Jo",
+          tracking_number: "1Z999AA10123456784",
+          inserted_at: ~U[2026-03-11 10:00:00Z],
+          items: [
+            %Kove.Orders.OrderItem{
+              name_snapshot: "450 Rally Oil Change Kit",
+              quantity: 2,
+              unit_price_cents: 5499
+            }
+          ]
+        }
+      ]
+
+      prompt = Prompt.build_system_prompt(build_bike(), [], orders)
+
+      assert prompt =~ "Tracking: 1Z999AA10123456784"
+      assert prompt =~ "$109.98"
+    end
+
+    test "excludes rider orders section when orders is empty" do
+      prompt = Prompt.build_system_prompt(build_bike(), [], [])
+      refute prompt =~ "RIDER ORDERS"
+    end
+
+    test "excludes rider orders section when orders is nil" do
+      prompt = Prompt.build_system_prompt(build_bike(), [], nil)
+      refute prompt =~ "RIDER ORDERS"
+    end
+
+    test "filters out cart-status orders from prompt" do
+      orders = [
+        %Kove.Orders.Order{
+          id: 99,
+          status: "cart",
+          customer_name: nil,
+          tracking_number: nil,
+          inserted_at: ~U[2026-03-10 14:30:00Z],
+          items: [
+            %Kove.Orders.OrderItem{
+              name_snapshot: "800X Oil Change Kit",
+              quantity: 1,
+              unit_price_cents: 6499
+            }
+          ]
+        }
+      ]
+
+      prompt = Prompt.build_system_prompt(build_bike(), [], orders)
+      refute prompt =~ "RIDER ORDERS"
+      refute prompt =~ "Order #99"
+    end
+
+    test "includes orders-aware rule when orders are present" do
+      orders = [
+        %Kove.Orders.Order{
+          id: 1,
+          status: "confirmed",
+          customer_name: "Rider",
+          tracking_number: nil,
+          inserted_at: ~U[2026-03-10 14:30:00Z],
+          items: [
+            %Kove.Orders.OrderItem{
+              name_snapshot: "Kit",
+              quantity: 1,
+              unit_price_cents: 100
+            }
+          ]
+        }
+      ]
+
+      prompt = Prompt.build_system_prompt(build_bike(), [], orders)
+      assert prompt =~ "order status"
+    end
   end
 
   # ── Catalog prompt tests ─────────────────────────────────────────────

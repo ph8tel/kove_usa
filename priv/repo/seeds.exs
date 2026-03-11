@@ -537,10 +537,74 @@ Enum.each(bikes_data, fn product ->
 end)
 
 IO.puts("✓ Successfully seeded all bikes and related data")
+
+# ============================================================================
+# CREATE PART KITS (Oil Change Kits)
+# ============================================================================
+
+IO.puts("Creating oil change kits...")
+
+alias Kove.Parts.PartKit
+alias Kove.Parts.PartKitCompatibility
+
+oil_change_kits = [
+  %{
+    sku: "OIL-KIT-800X",
+    name: "800X Oil Change Kit",
+    description:
+      "Complete oil change kit for the 800X twin — includes 3.5L Motul 7100 10W-50 synthetic, OEM oil filter, crush washer, and drain plug O-ring.",
+    price_cents: 6499,
+    engine: engine_800x
+  },
+  %{
+    sku: "OIL-KIT-450R",
+    name: "450 Rally Oil Change Kit",
+    description:
+      "Complete oil change kit for the 450 Rally — includes 1.6L Motul 7100 10W-50 synthetic, OEM oil filter, crush washer, and drain plug O-ring.",
+    price_cents: 4299,
+    engine: engine_450
+  },
+  %{
+    sku: "OIL-KIT-MX450",
+    name: "MX450 Oil Change Kit",
+    description:
+      "Complete oil change kit for the MX450 — includes 1.4L Motul 7100 10W-50 synthetic, OEM oil filter, crush washer, and drain plug O-ring.",
+    price_cents: 3999,
+    engine: engine_mx450
+  },
+  %{
+    sku: "OIL-KIT-MX250",
+    name: "MX250 Oil Change Kit",
+    description:
+      "Complete oil change kit for the MX250 — includes 1.1L Motul 7100 10W-50 synthetic, OEM oil filter, crush washer, and drain plug O-ring.",
+    price_cents: 3499,
+    engine: engine_mx250
+  }
+]
+
+Enum.each(oil_change_kits, fn kit_data ->
+  {:ok, kit} =
+    %PartKit{}
+    |> PartKit.changeset(%{
+      sku: kit_data.sku,
+      name: kit_data.name,
+      description: kit_data.description,
+      price_cents: kit_data.price_cents
+    })
+    |> Repo.insert()
+
+  %PartKitCompatibility{}
+  |> PartKitCompatibility.changeset(%{part_kit_id: kit.id, engine_id: kit_data.engine.id})
+  |> Repo.insert!()
+end)
+
+IO.puts("✓ Created 4 oil change kits")
+
 IO.puts("")
 IO.puts("Summary:")
 IO.puts("  - 4 engine platforms created")
 IO.puts("  - 5 bikes created")
 IO.puts("  - Chassis specs, dimensions, features, images, and descriptions created")
+IO.puts("  - 4 oil change kits created (one per engine platform)")
 IO.puts("")
 IO.puts("Database seeding complete!")
