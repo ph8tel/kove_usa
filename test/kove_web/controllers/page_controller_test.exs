@@ -4,10 +4,11 @@ defmodule KoveWeb.PageControllerTest do
   describe "GET /privacy-policy" do
     test "renders the privacy policy page", %{conn: conn} do
       conn = get(conn, ~p"/privacy-policy")
+      html = html_response(conn, 200)
 
-      assert html_response(conn, 200) =~ "Privacy Policy"
-      assert html_response(conn, 200) =~ "Information We Collect"
-      assert html_response(conn, 200) =~ "Google OAuth"
+      assert html =~ "Privacy Policy"
+      assert html =~ "Information We Collect"
+      assert html =~ "Google OAuth"
     end
   end
 end
