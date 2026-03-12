@@ -1,0 +1,68 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: kove_dev
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      MIX_ENV: dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.17.0'
+          otp-version: '26.0'
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Mix deps
+        run: mix deps.get
+
+      - name: Install Node deps
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Compile Phoenix
+        run: mix compile
+
+      - name: Build assets
+        run: mix assets.deploy
+
+      - name: Setup DB
+        run: |
+          mix ecto.create
+          mix ecto.migrate
+          mix run priv/repo/seeds.exs
+
+      - name: Run Playwright tests
+        run: npx playwright test
+

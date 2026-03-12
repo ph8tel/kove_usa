@@ -141,6 +141,12 @@ if groq_key do
   config :kove, :groq_api_key, groq_key
 end
 
+# Allow the Groq API base URL to be overridden at runtime.
+# Used in E2E tests to point at a local mock server instead of api.groq.com.
+if groq_base_url = System.get_env("GROQ_BASE_URL") do
+  config :kove, :groq_base_url, groq_base_url
+end
+
 # Load OpenAI API key — used for text embeddings (text-embedding-3-small)
 openai_key =
   System.get_env("OPENAI_API_KEY") ||
@@ -162,6 +168,12 @@ openai_key =
 
 if openai_key do
   config :kove, :openai_api_key, openai_key
+end
+
+# Allow the OpenAI API base URL to be overridden at runtime.
+# Used in E2E tests to point at a local mock server instead of api.openai.com.
+if openai_base_url = System.get_env("OPENAI_BASE_URL") do
+  config :kove, :openai_base_url, openai_base_url
 end
 
 # Load Cloudflare R2 storage credentials — from env vars, or fall back to ../.env file

@@ -28,12 +28,22 @@ defmodule Kove.Repo.Migrations.CreateUserBikeMods do
       add :installed_at, :date
       add :rating, :integer
       add :position, :integer, default: 0, null: false
-      add :embedding, :vector, size: 768
 
       timestamps(type: :utc_datetime)
     end
 
     create index(:user_bike_mods, [:user_bike_id])
+
+    # Add vector column only if pgvector extension is available
+    execute("""
+    DO $$
+    BEGIN
+      ALTER TABLE user_bike_mods ADD COLUMN embedding vector(768);
+    EXCEPTION WHEN OTHERS THEN
+      RAISE NOTICE 'pgvector not available, skipping user_bike_mods embedding column';
+    END
+    $$;
+    """)
   end
 
   def down do

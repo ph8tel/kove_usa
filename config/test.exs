@@ -19,9 +19,9 @@ config :kove, Kove.Repo,
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :kove, KoveWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "/Im5HVFp95nWqrk0YQnEMmUg4/2jGCS/LSPhD0DealteUktEPJYQ49MsDg4gZSlZ",
-  server: false
+  http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "4000")],
+  server: true,
+  secret_key_base: "/Im5HVFp95nWqrk0YQnEMmUg4/2jGCS/LSPhD0DealteUktEPJYQ49MsDg4gZSlZ"
 
 # In test we don't send emails
 config :kove, Kove.Mailer, adapter: Swoosh.Adapters.Test

@@ -16,8 +16,14 @@ defmodule Kove.KovyAssistant.Groq do
 
   alias Kove.KovyAssistant.GroqError
 
-  @groq_url "https://api.groq.com/openai/v1/chat/completions"
   @default_model "llama-3.3-70b-versatile"
+
+  # Reads the base URL at runtime so the mock server URL can be injected
+  # via the GROQ_BASE_URL environment variable during testing.
+  defp groq_chat_url do
+    base = Application.get_env(:kove, :groq_base_url, "https://api.groq.com")
+    base <> "/openai/v1/chat/completions"
+  end
 
   defp api_key do
     Application.get_env(:kove, :groq_api_key) || System.get_env("GROQ_API_KEY")
@@ -96,7 +102,7 @@ defmodule Kove.KovyAssistant.Groq do
 
     try do
       resp =
-        Req.post!(@groq_url,
+        Req.post!(groq_chat_url(),
           headers: headers,
           body: body,
           receive_timeout: 60_000,
@@ -186,7 +192,7 @@ defmodule Kove.KovyAssistant.Groq do
       {"content-type", "application/json"}
     ]
 
-    case Req.post(@groq_url, headers: headers, body: body) do
+    case Req.post(groq_chat_url(), headers: headers, body: body) do
       {:ok, %{status: 200, body: body}} ->
         content = get_in(body, ["choices", Access.at(0), "message", "content"])
 

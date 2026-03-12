@@ -24,8 +24,14 @@ defmodule Kove.KovyAssistant.Embeddings do
 
   alias Kove.Bikes
 
-  @openai_embed_url "https://api.openai.com/v1/embeddings"
   @embed_model "text-embedding-3-small"
+
+  # Reads the base URL at runtime so the mock server URL can be injected
+  # via the OPENAI_BASE_URL environment variable during testing.
+  defp openai_embed_url do
+    base = Application.get_env(:kove, :openai_base_url, "https://api.openai.com")
+    base <> "/v1/embeddings"
+  end
   @embed_dims 768
 
   defp api_key do
@@ -71,8 +77,17 @@ defmodule Kove.KovyAssistant.Embeddings do
   def find_relevant_bike_ids(user_message, limit \\ 4) when is_binary(user_message) do
     case embed_text(user_message) do
       {:ok, vector} ->
-        bike_ids = Bikes.search_bikes_by_embedding(vector, limit)
-        {:ok, bike_ids}
+        try do
+          bike_ids = Bikes.search_bikes_by_embedding(vector, limit)
+          {:ok, bike_ids}
+        rescue
+          e ->
+            Logger.warning("Embeddings: pgvector similarity search unavailable, falling back to keyword matching",
+              error: Exception.message(e)
+            )
+
+            {:error, :pgvector_unavailable}
+        end
 
       error ->
         error
@@ -96,7 +111,7 @@ defmodule Kove.KovyAssistant.Embeddings do
 
     try do
       resp =
-        Req.post!(@openai_embed_url,
+        Req.post!(openai_embed_url(),
           headers: headers,
           body: body,
           receive_timeout: 15_000
