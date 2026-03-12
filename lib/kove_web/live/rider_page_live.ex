@@ -149,11 +149,13 @@ defmodule KoveWeb.RiderPageLive do
               <div class="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
                 <%= if @bike.engine do %>
                   <div class="text-base-content/60">Engine</div>
-                  <div>{@bike.engine.displacement_cc}cc {@bike.engine.engine_type}</div>
+                  <div>{@bike.engine.displacement} {@bike.engine.engine_type}</div>
                   <div class="text-base-content/60">Power</div>
-                  <div>{@bike.engine.peak_power_hp} hp</div>
-                  <div class="text-base-content/60">Torque</div>
-                  <div>{@bike.engine.peak_torque_nm} Nm</div>
+                  <div>{@bike.engine.max_power}</div>
+                  <%= if @bike.engine.max_torque do %>
+                    <div class="text-base-content/60">Torque</div>
+                    <div>{@bike.engine.max_torque}</div>
+                  <% end %>
                 <% end %>
                 <%= if @bike.msrp_cents do %>
                   <div class="text-base-content/60">MSRP</div>
