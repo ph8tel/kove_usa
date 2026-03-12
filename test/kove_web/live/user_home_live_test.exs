@@ -16,10 +16,10 @@ defmodule KoveWeb.UserHomeLiveTest do
     end
 
     test "shows the bike selection form", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/home")
+      {:ok, lv, html} = live(conn, ~p"/home")
 
       assert html =~ "No bike selected yet"
-      assert has_element?(live(conn, ~p"/home") |> elem(1), "#select-bike-form")
+      assert has_element?(lv, "#select-bike-form")
     end
 
     test "shows all available bikes in the dropdown", %{conn: conn} do

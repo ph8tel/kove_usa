@@ -1062,9 +1062,8 @@ defmodule KoveWeb.UserHomeLive do
       end
 
     case result do
-      {:ok, _} ->
-        user_bike = UserBikes.get_user_bike(user)
-        bike = user_bike.bike
+      {:ok, user_bike} ->
+        bike = Bikes.get_bike!(bike_id)
         hero_slides = build_hero_slides(user_bike, bike)
         oil_change_kit = Parts.oil_change_kit_for_bike(bike)
 
@@ -1077,8 +1076,16 @@ defmodule KoveWeb.UserHomeLive do
          |> push_event("update-slides", %{slides: hero_slides})
          |> put_flash(:info, "#{bike.name} added to your garage!")}
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Could not save bike selection.")}
+      {:error, reason} ->
+        require Logger
+        Logger.error("Failed to save bike selection for user #{user.id}: #{inspect(reason)}")
+
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "We couldn't save your bike selection. This may happen if the selected bike is no longer available or due to a temporary server issue. Please try again."
+         )}
     end
   end
 
