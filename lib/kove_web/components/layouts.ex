@@ -87,7 +87,13 @@ defmodule KoveWeb.Layouts do
     </main>
 
     <footer class="footer footer-center p-6 text-base-content/50 text-sm">
-      <p>&copy; {Date.utc_today().year} Kove Moto USA. All rights reserved.</p>
+      <div class="flex items-center gap-2 flex-wrap justify-center">
+        <span>&copy; {Date.utc_today().year} Kove Moto USA. All rights reserved.</span>
+        <span aria-hidden="true">•</span>
+        <.link navigate={~p"/privacy-policy"} class="link link-hover">
+          Privacy Policy
+        </.link>
+      </div>
     </footer>
 
     <.flash_group flash={@flash} />

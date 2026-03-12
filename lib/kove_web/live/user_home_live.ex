@@ -803,13 +803,15 @@ defmodule KoveWeb.UserHomeLive do
 
     # Catalog hero image for the selected bike model
     catalog_slide =
-      if bike do
-        case Bikes.hero_image_url(bike) do
-          nil -> []
-          url -> [%{url: url, label: "#{bike.name} — Catalog"}]
-        end
-      else
-        []
+      case bike do
+        %Kove.Bikes.Bike{} = bike ->
+          case Bikes.hero_image_url(bike) do
+            nil -> []
+            url -> [%{url: url, label: "#{bike.name} — Catalog"}]
+          end
+
+        _ ->
+          []
       end
 
     # User photos first, then catalog hero
@@ -1062,8 +1064,9 @@ defmodule KoveWeb.UserHomeLive do
       end
 
     case result do
-      {:ok, user_bike} ->
-        bike = Bikes.get_bike!(bike_id)
+      {:ok, _user_bike} ->
+        user_bike = UserBikes.get_user_bike(user)
+        bike = user_bike.bike
         hero_slides = build_hero_slides(user_bike, bike)
         oil_change_kit = Parts.oil_change_kit_for_bike(bike)
 

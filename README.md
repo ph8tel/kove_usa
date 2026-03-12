@@ -33,6 +33,7 @@ A Phoenix LiveView application for the Kove Moto USA motorcycle catalog with **K
 - **Email/password registration and login** via `phx.gen.auth`
 - **Magic-link login** — one-click email authentication
 - **Google OAuth login/registration** — `Continue with Google` on both login and registration screens
+- **Public privacy policy** — required for Google OAuth app publishing, available at `/privacy-policy`
 - **Session management** — settings, email change, password change
 
 ## Tech Stack
@@ -81,6 +82,7 @@ Visit [localhost:4000](http://localhost:4000).
 | `/users/log-in` | `UserLive.Login` | Public | Email/password login |
 | `/users/log-in/:token` | `UserLive.Confirmation` | Public | Magic-link confirmation |
 | `/users/settings` | `UserLive.Settings` | **Required** | Email/password settings |
+| `/privacy-policy` | `PageController.privacy` | Public | Privacy statement for Google OAuth verification and public users |
 
 Controller auth routes:
 
@@ -287,13 +289,14 @@ Current status: **379 tests passing**.
 
 ### E2E (Playwright)
 
-End-to-end tests live in `e2e/` and run against a real Phoenix server pointed at a local mock API server (no real Groq/OpenAI/Google calls). Three spec files:
+End-to-end tests live in `e2e/` and run against a real Phoenix server pointed at a local mock API server (no real Groq/OpenAI/Google calls). Four spec files:
 
 | File | Covers |
 |------|--------|
 | `e2e/storefront.spec.ts` | Page structure, bike grid, Kovy chat panel (desktop + mobile FAB) on `/` |
 | `e2e/bike-details.spec.ts` | Page structure, image slider, spec tabs, navigation, Kovy chat (desktop + mobile FAB) on `/bikes/:slug` |
 | `e2e/auth.spec.ts` | Login/register page structure + Google OAuth login/registration flow |
+| `e2e/privacy.spec.ts` | Footer privacy link + privacy page structure with all five main policy sections |
 
 The mock API server (`e2e/support/mock-api-server.cjs`) stubs:
 - `POST /openai/v1/chat/completions` — streams a canned SSE response word-by-word with a 3 s initial delay so the disabled-input state is observable
