@@ -65,7 +65,7 @@ export default defineConfig({
        */
       command: 'node e2e/support/mock-api-server.cjs',
       url: 'http://localhost:4444/health',
-      /** Restart locally so code changes take effect; always fresh on CI. */
+      /** Reuse locally so you can keep the mock server running; always fresh on CI. */
       reuseExistingServer: !process.env.CI,
       timeout: 15_000,
     },

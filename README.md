@@ -315,7 +315,7 @@ GROQ_BASE_URL=http://localhost:4444 OPENAI_BASE_URL=http://localhost:4444 \
 npx playwright test
 ```
 
-> **Note:** `reuseExistingServer` is `true` locally for Phoenix (so your already-running dev server is reused) but `false` for the mock API server — it is always restarted to pick up code changes.
+> **Note:** Both the Phoenix app and the mock API server set `reuseExistingServer` to `!process.env.CI`, so `reuseExistingServer` is `true` locally (when `CI` is not set) and `false` on CI. Locally, an already-running server can be reused; on CI, a fresh server is always started.
 
 ## Environment Variables
 
