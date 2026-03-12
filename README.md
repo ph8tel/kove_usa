@@ -258,6 +258,8 @@ part_kits (1) ──< part_kit_compatibilities
 
 ## Testing
 
+### Unit / Integration (ExUnit)
+
 ```bash
 # Run all tests
 mix test
@@ -272,6 +274,48 @@ mix precommit
 ```
 
 Current status: **379 tests passing**.
+
+### E2E (Playwright)
+
+End-to-end tests live in `e2e/` and run against a real Phoenix server pointed at a local mock API server (no real Groq/OpenAI calls). Two spec files:
+
+| File | Covers |
+|------|--------|
+| `e2e/storefront.spec.ts` | Page structure, bike grid, Kovy chat panel (desktop + mobile FAB) on `/` |
+| `e2e/bike-details.spec.ts` | Page structure, image slider, spec tabs, navigation, Kovy chat (desktop + mobile FAB) on `/bikes/:slug` |
+
+The mock API server (`e2e/support/mock-api-server.cjs`) stubs:
+- `POST /openai/v1/chat/completions` — streams a canned SSE response word-by-word with a 3 s initial delay so the disabled-input state is observable
+- `POST /v1/embeddings` — returns a fake 768-dim vector
+- `GET /health` — Playwright readiness probe
+
+```bash
+# Run all E2E tests (starts mock server + Phoenix automatically)
+npx playwright test
+
+# Run a single spec file
+npx playwright test e2e/storefront.spec.ts
+npx playwright test e2e/bike-details.spec.ts
+
+# Run headed (browser visible) for debugging
+npx playwright test --headed
+
+# Run a single test by name
+npx playwright test -g 'bike grid'
+
+# View HTML report from the last run
+npx playwright show-report
+```
+
+**Running manually** (skip auto-start):
+```bash
+node e2e/support/mock-api-server.cjs &
+GROQ_BASE_URL=http://localhost:4444 OPENAI_BASE_URL=http://localhost:4444 \
+  GROQ_API_KEY=mock OPENAI_API_KEY=mock mix phx.server &
+npx playwright test
+```
+
+> **Note:** `reuseExistingServer` is `true` locally for Phoenix (so your already-running dev server is reused) but `false` for the mock API server — it is always restarted to pick up code changes.
 
 ## Environment Variables
 

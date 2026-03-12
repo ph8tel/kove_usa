@@ -24,8 +24,14 @@ defmodule Kove.KovyAssistant.Embeddings do
 
   alias Kove.Bikes
 
-  @openai_embed_url "https://api.openai.com/v1/embeddings"
   @embed_model "text-embedding-3-small"
+
+  # Reads the base URL at runtime so the mock server URL can be injected
+  # via the OPENAI_BASE_URL environment variable during testing.
+  defp openai_embed_url do
+    base = Application.get_env(:kove, :openai_base_url, "https://api.openai.com")
+    base <> "/v1/embeddings"
+  end
   @embed_dims 768
 
   defp api_key do
@@ -96,7 +102,7 @@ defmodule Kove.KovyAssistant.Embeddings do
 
     try do
       resp =
-        Req.post!(@openai_embed_url,
+        Req.post!(openai_embed_url(),
           headers: headers,
           body: body,
           receive_timeout: 15_000

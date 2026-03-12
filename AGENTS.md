@@ -84,13 +84,23 @@ Kove.Supervisor (one_for_one)
 
 ## Testing
 
-- **315 tests** across app/context/schema/liveview/auth layers, all passing
+### ExUnit (unit + integration)
+- **379 tests** across app/context/schema/liveview/auth layers, all passing
 - **Mox** is used for the Groq client — `GroqBehaviour` defines the contract, `GroqMock` replaces it in test env
 - Tests that exercise the GenServer → Task pipeline use `set_mox_global` (not async) because Mox expectations must cross process boundaries
 - Schema tests validate changesets and constraints for all schemas (Bike, Engine, ChassisSpec, Dimension, BikeFeature, Image, Description, Order, UserBike, UserBikeMod, UserBikeImage)
 - LiveView tests use `Phoenix.LiveViewTest` — send events, simulate streaming callbacks via `send(view.pid, {:kovy_chunk, ...})`
 - Auth tests cover registration, login, magic-link confirmation, settings, session management
 - Run: `mix test` or `mix precommit` (compile warnings + format + tests)
+
+### Playwright (E2E)
+- **Two spec files** in `e2e/`: `storefront.spec.ts` and `bike-details.spec.ts`
+- A local **mock API server** (`e2e/support/mock-api-server.cjs`) intercepts all Groq and OpenAI calls — no real API keys needed
+- The mock streams a canned response with a **3 s initial delay** so the `chat_loading = true` disabled-input state is observable by Playwright's polling
+- `GROQ_BASE_URL` / `OPENAI_BASE_URL` are injected by `playwright.config.ts` via `webServer.env`; they are **not set on Fly.io** — production always hits the real APIs
+- The mock API server uses `reuseExistingServer: false` locally so code changes are always picked up; Phoenix uses `reuseExistingServer: true` so a running dev server is reused
+- Image-slider tests guard against single-image bikes by checking for the "Next image" button (2 s timeout) before running, rather than calling `textContent()` which would hang until the action timeout
+- Run: `npx playwright test` or target a single file: `npx playwright test e2e/storefront.spec.ts`
 
 ## File Layout
 
@@ -159,6 +169,12 @@ lib/kove_web/
     ├── error_json.ex
     ├── page_controller.ex
     └── user_session_controller.ex
+
+e2e/
+├── storefront.spec.ts          # Playwright: storefront page structure, bike grid, Kovy chat
+├── bike-details.spec.ts        # Playwright: detail page structure, spec tabs, image slider, Kovy chat
+└── support/
+    └── mock-api-server.cjs     # Node.js stub for Groq + OpenAI APIs (SSE + embeddings)
 
 config/
 ├── config.exs                  # Base config

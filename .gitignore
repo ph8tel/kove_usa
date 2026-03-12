@@ -63,3 +63,11 @@ cover/
 # Local AI/agent extension artifacts
 .agents/
 skills-lock.json
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
