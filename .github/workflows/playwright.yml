@@ -28,7 +28,6 @@ jobs:
       MIX_ENV: test
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/kove_test
       SECRET_KEY_BASE: test_secret_key_base_123
-      PHX_SERVER: true
 
     steps:
       - name: Checkout code
@@ -54,21 +53,16 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Build assets
-        run: mix assets.deploy
-
       - name: Compile Phoenix
         run: mix compile
+
+      - name: Build assets
+        run: mix assets.deploy
 
       - name: Setup DB
         run: |
           mix ecto.create
           mix ecto.migrate
-
-      - name: Start Phoenix server
-        run: |
-          mix phx.server &
-          sleep 5
 
       - name: Run Playwright tests
         run: npx playwright test
