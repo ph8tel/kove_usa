@@ -32,6 +32,7 @@ defmodule Kove.KovyAssistant.Embeddings do
     base = Application.get_env(:kove, :openai_base_url, "https://api.openai.com")
     base <> "/v1/embeddings"
   end
+
   @embed_dims 768
 
   defp api_key do
@@ -82,7 +83,8 @@ defmodule Kove.KovyAssistant.Embeddings do
           {:ok, bike_ids}
         rescue
           e ->
-            Logger.warning("Embeddings: pgvector similarity search unavailable, falling back to keyword matching",
+            Logger.warning(
+              "Embeddings: pgvector similarity search unavailable, falling back to keyword matching",
               error: Exception.message(e)
             )
 

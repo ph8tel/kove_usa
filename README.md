@@ -32,6 +32,7 @@ A Phoenix LiveView application for the Kove Moto USA motorcycle catalog with **K
 ### Auth
 - **Email/password registration and login** via `phx.gen.auth`
 - **Magic-link login** — one-click email authentication
+- **Google OAuth login/registration** — `Continue with Google` on both login and registration screens
 - **Session management** — settings, email change, password change
 
 ## Tech Stack
@@ -55,7 +56,7 @@ A Phoenix LiveView application for the Kove Moto USA motorcycle catalog with **K
 ```bash
 # 1. Copy env file and add your API keys
 cp .env.example .env
-# edit .env → set GROQ_API_KEY, OPENAI_API_KEY, R2_* vars
+# edit .env → set GROQ_API_KEY, OPENAI_API_KEY, R2_* vars, GOOGLE_OAUTH_* vars
 
 # 2. Start Postgres (docker-compose provided)
 docker compose up -d
@@ -81,12 +82,20 @@ Visit [localhost:4000](http://localhost:4000).
 | `/users/log-in/:token` | `UserLive.Confirmation` | Public | Magic-link confirmation |
 | `/users/settings` | `UserLive.Settings` | **Required** | Email/password settings |
 
+Controller auth routes:
+
+| Path | Controller | Auth | Description |
+|------|------------|------|-------------|
+| `/auth/google` | `GoogleAuthController.request` | Public | Starts Google OAuth flow (state + redirect) |
+| `/auth/google/callback` | `GoogleAuthController.callback` | Public | Handles OAuth callback, links/creates user, logs in |
+
 ## Project Structure
 
 ```
 lib/kove/
 ├── accounts.ex                     # Accounts context (auth, users, tokens)
 ├── accounts/
+│   ├── google_oauth.ex             # Google OAuth client (authorize URL, token exchange, userinfo)
 │   ├── scope.ex                    # Kove.Accounts.Scope
 │   ├── user.ex                     # User schema
 │   ├── user_notifier.ex            # Email notifications (magic link, etc.)
@@ -150,6 +159,7 @@ lib/kove_web/
 │   ├── layouts.ex
 │   └── layouts/root.html.heex
 └── controllers/
+  ├── google_auth_controller.ex   # Google OAuth start/callback handlers
     ├── error_html.ex
     ├── error_json.ex
     ├── page_controller.ex
@@ -277,16 +287,20 @@ Current status: **379 tests passing**.
 
 ### E2E (Playwright)
 
-End-to-end tests live in `e2e/` and run against a real Phoenix server pointed at a local mock API server (no real Groq/OpenAI calls). Two spec files:
+End-to-end tests live in `e2e/` and run against a real Phoenix server pointed at a local mock API server (no real Groq/OpenAI/Google calls). Three spec files:
 
 | File | Covers |
 |------|--------|
 | `e2e/storefront.spec.ts` | Page structure, bike grid, Kovy chat panel (desktop + mobile FAB) on `/` |
 | `e2e/bike-details.spec.ts` | Page structure, image slider, spec tabs, navigation, Kovy chat (desktop + mobile FAB) on `/bikes/:slug` |
+| `e2e/auth.spec.ts` | Login/register page structure + Google OAuth login/registration flow |
 
 The mock API server (`e2e/support/mock-api-server.cjs`) stubs:
 - `POST /openai/v1/chat/completions` — streams a canned SSE response word-by-word with a 3 s initial delay so the disabled-input state is observable
 - `POST /v1/embeddings` — returns a fake 768-dim vector
+- `GET /google/o/oauth2/v2/auth` — immediate redirect back to app callback with mock auth code + state
+- `POST /google/oauth2/token` — returns a fake Google access token response
+- `GET /google/oauth2/v3/userinfo` — returns a fake Google profile payload
 - `GET /health` — Playwright readiness probe
 
 ```bash
@@ -311,7 +325,11 @@ npx playwright show-report
 ```bash
 node e2e/support/mock-api-server.cjs &
 GROQ_BASE_URL=http://localhost:4444 OPENAI_BASE_URL=http://localhost:4444 \
-  GROQ_API_KEY=mock OPENAI_API_KEY=mock mix phx.server &
+  GOOGLE_OAUTH_BASE_URL=http://localhost:4444/google \
+  GROQ_API_KEY=mock OPENAI_API_KEY=mock \
+  GOOGLE_OAUTH_CLIENT_ID=mock GOOGLE_OAUTH_CLIENT_SECRET=mock \
+  GOOGLE_OAUTH_REDIRECT_URI=http://localhost:4000/auth/google/callback \
+  mix phx.server &
 npx playwright test
 ```
 
@@ -330,6 +348,10 @@ npx playwright test
 | `R2_SECRET_ACCESS_KEY` | Yes (for photos) | R2 secret key |
 | `R2_BUCKET` | Yes (for photos) | R2 bucket name |
 | `R2_PUBLIC_URL` | Yes (for photos) | R2 public URL prefix |
+| `GOOGLE_OAUTH_CLIENT_ID` | Yes (for Google login) | Google OAuth client ID |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | Yes (for Google login) | Google OAuth client secret |
+| `GOOGLE_OAUTH_REDIRECT_URI` | Yes (for Google login) | OAuth callback URL (`/auth/google/callback`) |
+| `GOOGLE_OAUTH_BASE_URL` | E2E only | Local mock Google OAuth base URL (not used in production) |
 
 Dev/test: auto-loaded from `../.env` file by `runtime.exs`. Prod: Fly.io secrets (`fly secrets set`).
 

@@ -68,5 +68,11 @@ defmodule KoveWeb.Router do
 
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
+
+    # Google OAuth — initiate flow and handle callback.
+    # Both routes use the browser pipeline so that session cookies are available
+    # (needed for the CSRF state token and for UserAuth.log_in_user/2).
+    get "/auth/google", GoogleAuthController, :request
+    get "/auth/google/callback", GoogleAuthController, :callback
   end
 end

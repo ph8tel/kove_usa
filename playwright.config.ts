@@ -85,10 +85,16 @@ export default defineConfig({
       env: {
         GROQ_BASE_URL: 'http://localhost:4444',
         OPENAI_BASE_URL: 'http://localhost:4444',
+        GOOGLE_OAUTH_BASE_URL: 'http://localhost:4444/google',
         // Provide a dummy key so the Groq module doesn't short-circuit with
         // "API key not configured" before it even reaches the mock server.
         GROQ_API_KEY: 'mock-api-key-for-e2e-tests',
         OPENAI_API_KEY: 'mock-api-key-for-e2e-tests',
+        // Provide dummy Google credentials so the OAuth module doesn't raise
+        // on startup when the real env vars aren't set in the test environment.
+        GOOGLE_OAUTH_CLIENT_ID: 'mock-client-id-for-e2e-tests',
+        GOOGLE_OAUTH_CLIENT_SECRET: 'mock-client-secret-for-e2e-tests',
+        GOOGLE_OAUTH_REDIRECT_URI: 'http://localhost:4000/auth/google/callback',
       },
     },
   ],

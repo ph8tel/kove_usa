@@ -8,6 +8,7 @@ defmodule Kove.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
+    field :google_id, :string
 
     timestamps(type: :utc_datetime)
   end
@@ -104,6 +105,26 @@ defmodule Kove.Accounts.User do
     else
       changeset
     end
+  end
+
+  @doc """
+  A user changeset for registration via Google OAuth.
+
+  Sets email, google_id, and auto-confirms the account since Google has
+  already verified the email address.
+  """
+  def google_registration_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:email, :google_id])
+    |> validate_required([:email])
+    |> validate_format(:email, ~r/^[^@,;\s]+@[^@,;\s]+$/,
+      message: "must have the @ sign and no spaces"
+    )
+    |> validate_length(:email, max: 160)
+    |> unsafe_validate_unique(:email, Kove.Repo)
+    |> unique_constraint(:email)
+    |> unique_constraint(:google_id)
+    |> put_change(:confirmed_at, DateTime.utc_now(:second))
   end
 
   @doc """

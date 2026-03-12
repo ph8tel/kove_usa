@@ -80,6 +80,38 @@ defmodule Kove.Accounts do
     |> Repo.insert()
   end
 
+  @doc """
+  Finds or creates a user based on their Google OAuth profile.
+
+  Three cases:
+  1. Returning Google user (google_id already in DB) — returns the user as-is.
+  2. Existing email user logging in with Google for the first time — links their
+     Google account by saving the google_id, then returns the user.
+  3. Brand-new rider — registers a confirmed account with email + google_id.
+  """
+  def register_or_login_with_google(%{email: email, google_id: google_id}) do
+    case Repo.get_by(User, google_id: google_id) do
+      %User{} = user ->
+        # Returning Google user
+        {:ok, user}
+
+      nil ->
+        case Repo.get_by(User, email: email) do
+          nil ->
+            # New rider — register via Google
+            %User{}
+            |> User.google_registration_changeset(%{email: email, google_id: google_id})
+            |> Repo.insert()
+
+          %User{} = existing_user ->
+            # Existing rider — link their Google account
+            existing_user
+            |> Ecto.Changeset.change(%{google_id: google_id})
+            |> Repo.update()
+        end
+    end
+  end
+
   ## Settings
 
   @doc """

@@ -6,7 +6,7 @@ Kove Moto USA is a product catalog and personalized rider dashboard for Kove mot
 
 - A **storefront** (`/`) showing a 2×3 grid of bike cards plus a catalog-wide streaming Kovy chat panel
 - **Bike detail pages** (`/bikes/:slug`) with spec tabs (Marketing, Engine, Chassis) and the same streaming Kovy chat UI in single-bike context
-- **User authentication** via `phx.gen.auth` with magic-link login and email/password
+- **User authentication** via `phx.gen.auth` with magic-link login, email/password, and Google OAuth 2.0
 - **My Garage** (`/home`) — an authenticated rider dashboard with:
   - Image carousel for user-uploaded bike photos (Cloudflare R2 storage)
   - **My Mods** tab — track rider modifications (exhaust, suspension, gearing, etc.) with dollar cost input and 5-star rating
@@ -17,6 +17,7 @@ Kove Moto USA is a product catalog and personalized rider dashboard for Kove mot
 ## Key Architecture Decisions
 
 - **Auth via `phx.gen.auth`** — magic-link login, email/password, session tokens. Public routes (`/`, `/bikes/:slug`) work with or without auth. `/home` requires authentication.
+- **Google OAuth flow** — `KoveWeb.GoogleAuthController` handles `/auth/google` and `/auth/google/callback`; user profile exchange is encapsulated in `Kove.Accounts.GoogleOAuth` (Req-based)
 - **Groq module is swappable** via `config :kove, :groq_module` (defaults to `Kove.KovyAssistant.Groq`, replaced by `GroqMock` in tests via Mox)
 - **Chat is streaming** — Groq SSE chunks flow: Task → `send(caller_pid, {:kovy_chunk, text})` → LiveView `handle_info` → assign update → re-render
 - **Shared `ChatLive` LiveComponent** renders both desktop panel and mobile FAB/drawer; parent LiveViews own state via `handle_info`
@@ -94,10 +95,10 @@ Kove.Supervisor (one_for_one)
 - Run: `mix test` or `mix precommit` (compile warnings + format + tests)
 
 ### Playwright (E2E)
-- **Two spec files** in `e2e/`: `storefront.spec.ts` and `bike-details.spec.ts`
-- A local **mock API server** (`e2e/support/mock-api-server.cjs`) intercepts all Groq and OpenAI calls — no real API keys needed
+- **Three spec files** in `e2e/`: `storefront.spec.ts`, `bike-details.spec.ts`, and `auth.spec.ts`
+- A local **mock API server** (`e2e/support/mock-api-server.cjs`) intercepts Groq, OpenAI, and Google OAuth calls — no real API keys needed
 - The mock streams a canned response with a **3 s initial delay** so the `chat_loading = true` disabled-input state is observable by Playwright's polling
-- `GROQ_BASE_URL` / `OPENAI_BASE_URL` are injected by `playwright.config.ts` via `webServer.env`; they are **not set on Fly.io** — production always hits the real APIs
+- `GROQ_BASE_URL` / `OPENAI_BASE_URL` / `GOOGLE_OAUTH_BASE_URL` are injected by `playwright.config.ts` via `webServer.env`; they are **not set on Fly.io** — production always hits the real APIs
 - The mock API server uses `reuseExistingServer: false` locally so code changes are always picked up; Phoenix uses `reuseExistingServer: true` so a running dev server is reused
 - Image-slider tests guard against single-image bikes by checking for the "Next image" button (2 s timeout) before running, rather than calling `textContent()` which would hang until the action timeout
 - Run: `npx playwright test` or target a single file: `npx playwright test e2e/storefront.spec.ts`
@@ -108,6 +109,7 @@ Kove.Supervisor (one_for_one)
 lib/kove/
 ├── accounts.ex                 # Accounts context (auth, users, tokens)
 ├── accounts/
+│   ├── google_oauth.ex         # Google OAuth 2.0 (authorize URL, token exchange, userinfo)
 │   ├── scope.ex                # Kove.Accounts.Scope
 │   ├── user.ex                 # User schema
 │   ├── user_notifier.ex        # Email notifications (magic link, etc.)
@@ -165,16 +167,18 @@ lib/kove_web/
 │   ├── layouts.ex
 │   └── layouts/root.html.heex
 └── controllers/
+  ├── google_auth_controller.ex # Google OAuth start/callback handlers
     ├── error_html.ex
     ├── error_json.ex
     ├── page_controller.ex
     └── user_session_controller.ex
 
 e2e/
+├── auth.spec.ts                # Playwright: login/register page structure + Google OAuth flow
 ├── storefront.spec.ts          # Playwright: storefront page structure, bike grid, Kovy chat
 ├── bike-details.spec.ts        # Playwright: detail page structure, spec tabs, image slider, Kovy chat
 └── support/
-    └── mock-api-server.cjs     # Node.js stub for Groq + OpenAI APIs (SSE + embeddings)
+  └── mock-api-server.cjs     # Node.js stub for Groq + OpenAI + Google OAuth endpoints
 
 config/
 ├── config.exs                  # Base config
@@ -199,6 +203,15 @@ assets/js/app.js                # Hooks: ScrollBottom (chat), Carousel (image sl
 | `R2_SECRET_ACCESS_KEY` | Yes (for photos) | R2 secret key |
 | `R2_BUCKET` | Yes (for photos) | R2 bucket name |
 | `R2_PUBLIC_URL` | Yes (for photos) | R2 public URL prefix |
+| `GOOGLE_OAUTH_CLIENT_ID` | Yes (for Google login) | Google OAuth client ID |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | Yes (for Google login) | Google OAuth client secret |
+| `GOOGLE_OAUTH_REDIRECT_URI` | Yes (for Google login) | OAuth callback URL (`/auth/google/callback`) |
+
+### Test-only env vars
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GOOGLE_OAUTH_BASE_URL` | E2E only | Overrides Google OAuth endpoints to local mock server |
 
 - Dev/test: auto-loaded from `../.env` file by `runtime.exs`
 - Prod: Fly.io secrets (`fly secrets set`)
