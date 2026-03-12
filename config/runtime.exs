@@ -229,3 +229,9 @@ if google_client_id && google_client_secret && google_redirect_uri do
     client_secret: google_client_secret,
     redirect_uri: google_redirect_uri
 end
+
+# Allow the Google OAuth base URL to be overridden at runtime.
+# Used in E2E tests to point at a local mock server instead of accounts.google.com.
+if google_oauth_base_url = System.get_env("GOOGLE_OAUTH_BASE_URL") do
+  config :kove, :google_oauth_base_url, google_oauth_base_url
+end

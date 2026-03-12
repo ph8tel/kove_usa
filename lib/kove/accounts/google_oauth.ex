@@ -6,11 +6,17 @@ defmodule Kove.Accounts.GoogleOAuth do
   Credentials are loaded from the application config (set via runtime.exs
   from `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, and
   `GOOGLE_OAUTH_REDIRECT_URI` environment variables).
+
+  For E2E tests, set `GOOGLE_OAUTH_BASE_URL` to point at the local mock server
+  (e.g. `http://localhost:4444/google`). When set, all three Google API endpoints
+  are re-rooted under that base URL instead of the real Google domains, mirroring
+  the `GROQ_BASE_URL` / `OPENAI_BASE_URL` pattern used for other integrations.
   """
 
-  @google_auth_url "https://accounts.google.com/o/oauth2/v2/auth"
-  @google_token_url "https://oauth2.googleapis.com/token"
-  @google_userinfo_url "https://www.googleapis.com/oauth2/v3/userinfo"
+  # Real Google base URLs — overridden at runtime when GOOGLE_OAUTH_BASE_URL is set.
+  @default_auth_base "https://accounts.google.com"
+  @default_api_base "https://oauth2.googleapis.com"
+  @default_userinfo_base "https://www.googleapis.com"
 
   @doc """
   Builds the Google OAuth 2.0 authorization URL.
@@ -28,7 +34,7 @@ defmodule Kove.Accounts.GoogleOAuth do
       state: state
     }
 
-    "#{@google_auth_url}?#{URI.encode_query(params)}"
+    "#{auth_url()}?#{URI.encode_query(params)}"
   end
 
   @doc """
@@ -45,7 +51,7 @@ defmodule Kove.Accounts.GoogleOAuth do
       redirect_uri: redirect_uri()
     }
 
-    case Req.post(@google_token_url, form: body) do
+    case Req.post(token_url(), form: body) do
       {:ok, %{status: 200, body: body}} ->
         {:ok, body["access_token"]}
 
@@ -63,7 +69,7 @@ defmodule Kove.Accounts.GoogleOAuth do
   Returns `{:ok, %{email: email, google_id: sub, name: name}}` or `{:error, reason}`.
   """
   def get_user_info(access_token) do
-    case Req.get(@google_userinfo_url,
+    case Req.get(userinfo_url(),
            headers: [{"authorization", "Bearer #{access_token}"}]
          ) do
       {:ok, %{status: 200, body: body}} ->
@@ -93,7 +99,39 @@ defmodule Kove.Accounts.GoogleOAuth do
   end
 
   # ---------------------------------------------------------------------------
-  # Private helpers
+  # Private helpers — URLs
+  # ---------------------------------------------------------------------------
+
+  # When GOOGLE_OAUTH_BASE_URL is set (e.g. in E2E tests), all three endpoints
+  # are re-rooted under that single base URL, appending the original path suffix.
+  # Example: base = "http://localhost:4444/google"
+  #   auth_url()     → "http://localhost:4444/google/o/oauth2/v2/auth"
+  #   token_url()    → "http://localhost:4444/google/oauth2/token"
+  #   userinfo_url() → "http://localhost:4444/google/oauth2/v3/userinfo"
+
+  defp auth_url do
+    case Application.get_env(:kove, :google_oauth_base_url) do
+      nil -> "#{@default_auth_base}/o/oauth2/v2/auth"
+      base -> "#{base}/o/oauth2/v2/auth"
+    end
+  end
+
+  defp token_url do
+    case Application.get_env(:kove, :google_oauth_base_url) do
+      nil -> "#{@default_api_base}/token"
+      base -> "#{base}/oauth2/token"
+    end
+  end
+
+  defp userinfo_url do
+    case Application.get_env(:kove, :google_oauth_base_url) do
+      nil -> "#{@default_userinfo_base}/oauth2/v3/userinfo"
+      base -> "#{base}/oauth2/v3/userinfo"
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Private helpers — credentials
   # ---------------------------------------------------------------------------
 
   defp client_id do
