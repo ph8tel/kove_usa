@@ -152,8 +152,7 @@ defmodule Kove.KovyAssistant.EmbeddingsTest do
         try do
           # This is the exact code path inside find_relevant_bike_ids after embed_text succeeds.
           raise Postgrex.Error,
-            message:
-              "ERROR 42883 (undefined_function) operator does not exist: vector <=> vector"
+            message: "ERROR 42883 (undefined_function) operator does not exist: vector <=> vector"
         rescue
           _ -> {:error, :pgvector_unavailable}
         end

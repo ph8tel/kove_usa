@@ -212,3 +212,20 @@ if r2_account_id && r2_access_key_id && r2_secret_access_key do
         "https://#{r2_account_id}.r2.cloudflarestorage.com/#{r2_bucket || "kove-uploads"}",
     region: "auto"
 end
+
+# Load Google OAuth credentials — from env vars, or fall back to ../.env file
+google_client_id =
+  System.get_env("GOOGLE_OAUTH_CLIENT_ID") || env_vars["GOOGLE_OAUTH_CLIENT_ID"]
+
+google_client_secret =
+  System.get_env("GOOGLE_OAUTH_CLIENT_SECRET") || env_vars["GOOGLE_OAUTH_CLIENT_SECRET"]
+
+google_redirect_uri =
+  System.get_env("GOOGLE_OAUTH_REDIRECT_URI") || env_vars["GOOGLE_OAUTH_REDIRECT_URI"]
+
+if google_client_id && google_client_secret && google_redirect_uri do
+  config :kove, :google_oauth,
+    client_id: google_client_id,
+    client_secret: google_client_secret,
+    redirect_uri: google_redirect_uri
+end
