@@ -77,8 +77,17 @@ defmodule Kove.KovyAssistant.Embeddings do
   def find_relevant_bike_ids(user_message, limit \\ 4) when is_binary(user_message) do
     case embed_text(user_message) do
       {:ok, vector} ->
-        bike_ids = Bikes.search_bikes_by_embedding(vector, limit)
-        {:ok, bike_ids}
+        try do
+          bike_ids = Bikes.search_bikes_by_embedding(vector, limit)
+          {:ok, bike_ids}
+        rescue
+          e ->
+            Logger.warning("Embeddings: pgvector similarity search unavailable, falling back to keyword matching",
+              error: Exception.message(e)
+            )
+
+            {:error, :pgvector_unavailable}
+        end
 
       error ->
         error
