@@ -48,14 +48,14 @@ jobs:
       - name: Install Mix deps
         run: mix deps.get
 
-      - name: Install NPM deps
-        run: npm install --prefix assets
+      - name: Install Node deps
+        run: npm ci
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
       - name: Build assets
-        run: npm run deploy --prefix assets
+        run: mix assets.deploy
 
       - name: Compile Phoenix
         run: mix compile
