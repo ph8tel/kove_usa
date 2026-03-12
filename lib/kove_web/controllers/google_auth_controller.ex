@@ -12,11 +12,17 @@ defmodule KoveWeb.GoogleAuthController do
   and redirects the browser to Google's authorization endpoint.
   """
   def request(conn, _params) do
-    state = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+    if GoogleOAuth.configured?() do
+      state = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
 
-    conn
-    |> put_session(:google_oauth_state, state)
-    |> redirect(external: GoogleOAuth.authorize_url(state))
+      conn
+      |> put_session(:google_oauth_state, state)
+      |> redirect(external: GoogleOAuth.authorize_url(state))
+    else
+      conn
+      |> put_flash(:error, "Google sign-in is not configured.")
+      |> redirect(to: ~p"/users/log-in")
+    end
   end
 
   @doc """

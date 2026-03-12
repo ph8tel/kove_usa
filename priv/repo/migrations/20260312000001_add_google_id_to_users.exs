@@ -3,7 +3,7 @@ defmodule Kove.Repo.Migrations.AddGoogleIdToUsers do
 
   def change do
     alter table(:users) do
-      add :google_id, :string
+      add :google_id, :string, size: 255
     end
 
     create unique_index(:users, [:google_id])
