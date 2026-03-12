@@ -22,30 +22,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Elixir and OTP
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: '1.17.0'
-          otp-version: '26.0'
-
-      - name: Cache Mix dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            deps
-            _build
-          key: ${{ runner.os }}-mix-sobelow-${{ hashFiles('mix.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-mix-sobelow-
-
-      - name: Install Mix dependencies
-        run: mix deps.get
-
       - id: run-action
         name: Run Sobelow
-        uses: sobelow/action@1afd6d2cae70ae8bd900b58506f54487ed863912
+        uses: sobelow/action@v1.2.0
 
       - name: Upload SARIF report
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
