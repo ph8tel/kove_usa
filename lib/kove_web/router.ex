@@ -69,6 +69,9 @@ defmodule KoveWeb.Router do
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
 
+    # Public privacy policy page for OAuth verification and legal disclosure.
+    get "/privacy-policy", PageController, :privacy
+
     # Google OAuth — initiate flow and handle callback.
     # Both routes use the browser pipeline so that session cookies are available
     # (needed for the CSRF state token and for UserAuth.log_in_user/2).

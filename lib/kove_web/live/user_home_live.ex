@@ -1062,8 +1062,9 @@ defmodule KoveWeb.UserHomeLive do
       end
 
     case result do
-      {:ok, user_bike} ->
-        bike = Bikes.get_bike!(bike_id)
+      {:ok, _user_bike} ->
+        user_bike = UserBikes.get_user_bike(user)
+        bike = user_bike.bike
         hero_slides = build_hero_slides(user_bike, bike)
         oil_change_kit = Parts.oil_change_kit_for_bike(bike)
 
