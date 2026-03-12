@@ -27,6 +27,15 @@ defmodule Kove.Accounts do
   end
 
   @doc """
+  Gets a user by their public rider handle.
+
+  Returns `nil` if no user with that handle exists.
+  """
+  def get_user_by_handle(handle) when is_binary(handle) do
+    Repo.get_by(User, handle: handle)
+  end
+
+  @doc """
   Gets a user by email and password.
 
   ## Examples
@@ -75,8 +84,11 @@ defmodule Kove.Accounts do
 
   """
   def register_user(attrs) do
+    handle = generate_unique_handle(Map.get(attrs, "email") || Map.get(attrs, :email) || "")
+
     %User{}
     |> User.email_changeset(attrs)
+    |> Ecto.Changeset.put_change(:handle, handle)
     |> Repo.insert()
   end
 
@@ -99,8 +111,11 @@ defmodule Kove.Accounts do
         case Repo.get_by(User, email: email) do
           nil ->
             # New rider — register via Google
+            handle = generate_unique_handle(email)
+
             %User{}
             |> User.google_registration_changeset(%{email: email, google_id: google_id})
+            |> Ecto.Changeset.put_change(:handle, handle)
             |> Repo.insert()
 
           %User{} = existing_user ->
@@ -141,6 +156,49 @@ defmodule Kove.Accounts do
   """
   def change_user_email(user, attrs \\ %{}, opts \\ []) do
     User.email_changeset(user, attrs, opts)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user handle.
+  """
+  def change_user_handle(user, attrs \\ %{}, opts \\ []) do
+    User.handle_changeset(user, attrs, opts)
+  end
+
+  @doc """
+  Updates the rider handle.
+
+  Returns `{:error, :locked}` if the handle has already been changed once.
+  On success, locks the handle so it cannot be changed again.
+  """
+  def update_user_handle(user, attrs) do
+    if user.handle_locked do
+      {:error, :locked}
+    else
+      user
+      |> User.handle_changeset(attrs)
+      |> Ecto.Changeset.put_change(:handle_locked, true)
+      |> Repo.update()
+    end
+  end
+
+  @doc """
+  Generates a unique handle derived from the email address.
+
+  Appends a random 4-digit suffix to the email-derived base, making
+  collisions practically impossible without requiring a DB query at
+  registration time. The unique constraint on the column handles any rare
+  collision at the DB level.
+  """
+  def generate_unique_handle(email) do
+    base = User.handle_from_email(email)
+    base = if String.length(base) < 3, do: "rider", else: base
+
+    # Truncate base so base + "_XXXX" stays within 30 chars
+    base = String.slice(base, 0, 25)
+
+    suffix = :rand.uniform(9999) |> Integer.to_string() |> String.pad_leading(4, "0")
+    "#{base}_#{suffix}"
   end
 
   @doc """

@@ -16,6 +16,41 @@ defmodule KoveWeb.UserLive.Settings do
         </.header>
       </div>
 
+      <%!-- Rider Handle --%>
+      <.form
+        for={@handle_form}
+        id="handle_form"
+        phx-submit="update_handle"
+        phx-change="validate_handle"
+      >
+        <.input
+          field={@handle_form[:handle]}
+          type="text"
+          label="Rider Handle"
+          placeholder="e.g. motomike"
+          autocomplete="off"
+          spellcheck="false"
+          disabled={@handle_locked}
+        />
+        <p class="text-sm text-base-content/60 mt-1">
+          Your public page:
+          <span class="font-mono text-primary">kove.fly.dev/@{@current_handle}</span>
+        </p>
+        <%= if @handle_locked do %>
+          <p class="text-sm text-warning mt-1 flex items-center gap-1">
+            <.icon name="hero-lock-closed" class="size-4" />
+            Handle is locked — you've already used your one free change.
+          </p>
+        <% else %>
+          <p class="text-sm text-base-content/50 mt-1">
+            You get one free change. After saving, your handle is permanent.
+          </p>
+          <.button variant="primary" phx-disable-with="Saving...">Save Handle</.button>
+        <% end %>
+      </.form>
+
+      <div class="divider" />
+
       <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
         <.input
           field={@email_form[:email]}
@@ -87,18 +122,58 @@ defmodule KoveWeb.UserLive.Settings do
     user = socket.assigns.current_scope.user
     email_changeset = Accounts.change_user_email(user, %{}, validate_unique: false)
     password_changeset = Accounts.change_user_password(user, %{}, hash_password: false)
+    handle_changeset = Accounts.change_user_handle(user, %{}, validate_unique: false)
 
     socket =
       socket
       |> assign(:current_email, user.email)
+      |> assign(:current_handle, user.handle || "")
+      |> assign(:handle_locked, user.handle_locked)
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
+      |> assign(:handle_form, to_form(handle_changeset))
       |> assign(:trigger_submit, false)
 
     {:ok, socket}
   end
 
   @impl true
+  def handle_event("validate_handle", params, socket) do
+    %{"user" => user_params} = params
+
+    handle_form =
+      socket.assigns.current_scope.user
+      |> Accounts.change_user_handle(user_params, validate_unique: false)
+      |> Map.put(:action, :validate)
+      |> to_form()
+
+    {:noreply, assign(socket, handle_form: handle_form)}
+  end
+
+  def handle_event("update_handle", params, socket) do
+    %{"user" => user_params} = params
+    user = socket.assigns.current_scope.user
+
+    case Accounts.update_user_handle(user, user_params) do
+      {:ok, updated_user} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Rider handle updated! It is now locked.")
+         |> assign(:current_handle, updated_user.handle)
+         |> assign(:handle_locked, true)
+         |> assign(
+           :handle_form,
+           to_form(Accounts.change_user_handle(updated_user, %{}, validate_unique: false))
+         )}
+
+      {:error, :locked} ->
+        {:noreply, put_flash(socket, :error, "Your handle is locked and cannot be changed.")}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :handle_form, to_form(changeset, action: :insert))}
+    end
+  end
+
   def handle_event("validate_email", params, socket) do
     %{"user" => user_params} = params
 
