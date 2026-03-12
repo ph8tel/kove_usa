@@ -24,6 +24,8 @@ defmodule KoveWeb.UserHomeLive do
     user_orders = Orders.list_user_orders(user)
     cart = Orders.get_cart(user)
 
+    bike_options = Bikes.list_bikes() |> Enum.map(fn b -> {b.name, b.id} end)
+
     rate_limit_key =
       case get_connect_info(socket, :peer_data) do
         %{address: addr} -> {:ip, :inet.ntoa(addr) |> to_string()}
@@ -42,6 +44,7 @@ defmodule KoveWeb.UserHomeLive do
      |> assign(:cart_count, cart_count)
      |> assign(:cart, cart)
      |> assign(:user_orders, user_orders)
+     |> assign(:bike_options, bike_options)
      |> assign(:mod_form, to_form(UserBikes.change_mod(%UserBikeMod{}), as: :mod))
      |> assign(:mod_rating, nil)
      |> assign(:rate_limit_key, rate_limit_key)
@@ -209,7 +212,7 @@ defmodule KoveWeb.UserHomeLive do
               <%= if @bike do %>
                 <.mods_section user_bike={@user_bike} mod_form={@mod_form} mod_rating={@mod_rating} />
               <% else %>
-                <.no_bike_section />
+                <.no_bike_section bike_options={@bike_options} />
               <% end %>
             </div>
 
@@ -417,16 +420,47 @@ defmodule KoveWeb.UserHomeLive do
     """
   end
 
+  attr :bike_options, :list, required: true
+
   defp no_bike_section(assigns) do
     ~H"""
-    <div class="text-center py-8 space-y-4">
-      <.icon name="hero-truck" class="size-16 text-base-content/20 mx-auto" />
-      <h3 class="text-lg font-bold text-base-content/60">No bike selected yet</h3>
-      <p class="text-base-content/50 max-w-md mx-auto">
-        Browse our lineup and find your perfect Kove. You can update your bike selection in settings anytime.
-      </p>
-      <.link navigate={~p"/"} class="btn btn-primary btn-sm">
-        <.icon name="hero-magnifying-glass" class="size-4" /> Browse Bikes
+    <div class="text-center py-8 space-y-6 max-w-sm mx-auto">
+      <svg
+        class="size-16 mx-auto text-base-content/20"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path d="M19.44 9.03L15.41 5H11v2h3.59l2 2H5C2.2 9 0 11.2 0 14s2.2 5 5 5c2.42 0 4.44-1.72 4.9-4h2.2c.46 2.28 2.48 4 4.9 4 2.8 0 5-2.2 5-5 0-3.08-1.22-4.53-2.56-4.97zM7.82 15C7.4 16.15 6.28 17 5 17c-1.65 0-3-1.35-3-3s1.35-3 3-3c1.28 0 2.4.85 2.82 2H7.82zm4.09-2H9.93C9.43 11.28 7.86 10 6 10h-.45L7.95 7H11v2h2L11.91 13zM17 17c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z" />
+      </svg>
+
+      <div>
+        <h3 class="text-lg font-bold text-base-content/60">No bike selected yet</h3>
+        <p class="text-base-content/50 text-sm mt-1">
+          Choose your Kove to start tracking mods and maintenance.
+        </p>
+      </div>
+
+      <form id="select-bike-form" phx-submit="select-bike" class="space-y-3 text-left">
+        <select
+          id="select-bike-dropdown"
+          name="bike_id"
+          class="select select-bordered w-full"
+          required
+        >
+          <option value="">Select your bike…</option>
+          <%= for {name, id} <- @bike_options do %>
+            <option value={id}>{name}</option>
+          <% end %>
+        </select>
+        <button type="submit" id="select-bike-submit" class="btn btn-primary w-full">
+          <.icon name="hero-check" class="size-4" /> Set My Bike
+        </button>
+      </form>
+
+      <.link navigate={~p"/"} class="btn btn-ghost btn-sm">
+        <.icon name="hero-magnifying-glass" class="size-4" /> Browse All Bikes
       </.link>
     </div>
     """
@@ -1014,6 +1048,42 @@ defmodule KoveWeb.UserHomeLive do
       {:error, _reason} ->
         {:noreply, put_flash(socket, :error, "Could not remove mod.")}
     end
+  end
+
+  # ── Bike selection (for users who registered via Google OAuth without choosing a bike) ──
+
+  def handle_event("select-bike", %{"bike_id" => bike_id}, socket) when bike_id != "" do
+    user = socket.assigns.user
+
+    result =
+      case socket.assigns.user_bike do
+        nil -> UserBikes.create_user_bike(user, %{"bike_id" => bike_id})
+        user_bike -> UserBikes.update_user_bike(user_bike, %{"bike_id" => bike_id})
+      end
+
+    case result do
+      {:ok, _} ->
+        user_bike = UserBikes.get_user_bike(user)
+        bike = user_bike.bike
+        hero_slides = build_hero_slides(user_bike, bike)
+        oil_change_kit = Parts.oil_change_kit_for_bike(bike)
+
+        {:noreply,
+         socket
+         |> assign(:user_bike, user_bike)
+         |> assign(:bike, bike)
+         |> assign(:hero_slides, hero_slides)
+         |> assign(:oil_change_kit, oil_change_kit)
+         |> push_event("update-slides", %{slides: hero_slides})
+         |> put_flash(:info, "#{bike.name} added to your garage!")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not save bike selection.")}
+    end
+  end
+
+  def handle_event("select-bike", _params, socket) do
+    {:noreply, put_flash(socket, :error, "Please select a bike.")}
   end
 
   # ── Photo upload (form-based, matches registration pattern) ──
