@@ -1,38 +1,75 @@
 name: Playwright Tests
+
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+
 jobs:
   test:
-    timeout-minutes: 60
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: kove_test
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      MIX_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/kove_test
+      SECRET_KEY_BASE: test_secret_key_base_123
+      PHX_SERVER: true
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-    - uses: erlef/setup-beam@v1
-      with:
-        elixir-version: '1.16'
-        otp-version: '26'
-    - name: Install Node dependencies
-      run: npm ci
-    - name: Install Elixir/Phoenix dependencies
-      run: mix deps.get
-    - name: Set up database
-      run: mix ecto.setup
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      env:
-        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      run: npx playwright test
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.17.0'
+          otp-version: '26.0'
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Mix deps
+        run: mix deps.get
+
+      - name: Install NPM deps
+        run: npm install --prefix assets
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Build assets
+        run: npm run deploy --prefix assets
+
+      - name: Compile Phoenix
+        run: mix compile
+
+      - name: Setup DB
+        run: |
+          mix ecto.create
+          mix ecto.migrate
+
+      - name: Start Phoenix server
+        run: |
+          mix phx.server &
+          sleep 5
+
+      - name: Run Playwright tests
+        run: npx playwright test
+
