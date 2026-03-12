@@ -36,6 +36,7 @@ defmodule KoveWeb.UserHomeLive do
      socket
      |> assign(:page_title, "My Garage")
      |> assign(:user, user)
+     |> assign(:rider_handle, user.handle)
      |> assign(:user_bike, user_bike)
      |> assign(:bike, bike)
      |> assign(:hero_slides, hero_slides)
@@ -62,6 +63,31 @@ defmodule KoveWeb.UserHomeLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <%!-- Rider page nudge banner --%>
+      <%= if @rider_handle do %>
+        <div class="alert alert-info mb-6 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <.icon name="hero-link" class="size-5 flex-shrink-0" />
+            <span>
+              Your rider page is live at
+              <span class="font-mono font-semibold">kove.fly.dev/@{@rider_handle}</span>
+            </span>
+          </div>
+          <div class="flex gap-2">
+            <.link navigate={~p"/@#{@rider_handle}"} class="btn btn-sm btn-ghost">View</.link>
+            <button
+              id="home-share-btn"
+              phx-hook="SharePage"
+              data-share-title={"#{@rider_handle}'s Garage — Kove Moto USA"}
+              data-share-text={"Check out my Kove build! kove.fly.dev/@#{@rider_handle}"}
+              data-share-url={"https://kove.fly.dev/@#{@rider_handle}"}
+              class="btn btn-sm btn-ghost"
+            >
+              <.icon name="hero-share" class="size-4" /> Share
+            </button>
+          </div>
+        </div>
+      <% end %>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-8">
         <%!-- Left Column: User content (wider) --%>
         <div class="lg:col-span-2">

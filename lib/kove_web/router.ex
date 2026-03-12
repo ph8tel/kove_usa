@@ -61,6 +61,7 @@ defmodule KoveWeb.Router do
       on_mount: [{KoveWeb.UserAuth, :mount_current_scope}] do
       live "/", StorefrontLive
       live "/bikes/:slug", BikeDetailsLive
+      live "/@:handle", RiderPageLive
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new

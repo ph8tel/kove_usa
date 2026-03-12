@@ -51,6 +51,14 @@ defmodule KoveWeb.Layouts do
                 <span class="hidden sm:inline">My Garage</span>
               </.link>
             </li>
+            <%= if @current_scope.user.handle do %>
+              <li>
+                <.link navigate={"/@#{@current_scope.user.handle}"} class="btn btn-ghost btn-sm">
+                  <.icon name="hero-user-circle" class="size-4" />
+                  <span class="hidden sm:inline">My Page</span>
+                </.link>
+              </li>
+            <% end %>
             <li>
               <.link navigate="/users/settings" class="btn btn-ghost btn-sm">
                 <.icon name="hero-cog-6-tooth" class="size-4" />

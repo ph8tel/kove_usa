@@ -50,7 +50,7 @@ defmodule KoveWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end z-50"
+      class="toast toast-bottom toast-start z-50"
       {@rest}
     >
       <div class={[

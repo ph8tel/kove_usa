@@ -180,7 +180,35 @@ const Carousel = {
   }
 }
 
-const Hooks = { ...colocatedHooks, ScrollBottom, Carousel }
+const SharePage = {
+  mounted() {
+    this.el.addEventListener("click", async () => {
+      const title = this.el.dataset.shareTitle
+      const text = this.el.dataset.shareText
+      const url = this.el.dataset.shareUrl
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, text, url })
+        } catch (_e) {
+          // User cancelled or share failed — silently ignore
+        }
+      } else {
+        // Clipboard fallback
+        try {
+          await navigator.clipboard.writeText(url)
+          const orig = this.el.innerHTML
+          this.el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg> Copied!'
+          setTimeout(() => { this.el.innerHTML = orig }, 2000)
+        } catch (_e) {
+          // Clipboard also failed — nothing to do
+        }
+      }
+    })
+  }
+}
+
+const Hooks = { ...colocatedHooks, ScrollBottom, Carousel, SharePage }
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {

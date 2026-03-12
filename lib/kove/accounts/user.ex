@@ -2,6 +2,10 @@ defmodule Kove.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  # Reserved handles that cannot be claimed by riders
+  @reserved_handles ~w(home bikes users settings auth admin privacy support
+    help about contact api riders r www)
+
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true, redact: true
@@ -9,6 +13,8 @@ defmodule Kove.Accounts.User do
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
     field :google_id, :string
+    field :handle, :string
+    field :handle_locked, :boolean, default: false
 
     timestamps(type: :utc_datetime)
   end
@@ -149,5 +155,67 @@ defmodule Kove.Accounts.User do
   def valid_password?(_, _) do
     Bcrypt.no_user_verify()
     false
+  end
+
+  @doc """
+  A changeset for updating the rider handle.
+
+  Validates format (lowercase alphanumeric + underscores, 3–30 chars),
+  uniqueness, and that the handle is not reserved.
+
+  ## Options
+
+    * `:validate_unique` - Set to false during live validation. Defaults to `true`.
+  """
+  def handle_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:handle])
+    |> validate_required([:handle])
+    |> validate_format(:handle, ~r/^[a-z0-9_]+$/,
+      message: "only lowercase letters, numbers, and underscores"
+    )
+    |> validate_length(:handle, min: 3, max: 30)
+    |> validate_handle_not_reserved()
+    |> then(fn cs ->
+      if Keyword.get(opts, :validate_unique, true) do
+        cs
+        |> unsafe_validate_unique(:handle, Kove.Repo)
+        |> unique_constraint(:handle)
+      else
+        cs
+      end
+    end)
+  end
+
+  defp validate_handle_not_reserved(changeset) do
+    case get_change(changeset, :handle) do
+      nil ->
+        changeset
+
+      handle ->
+        if handle in @reserved_handles do
+          add_error(changeset, :handle, "is reserved")
+        else
+          changeset
+        end
+    end
+  end
+
+  @doc """
+  Derives a candidate handle from an email address.
+
+  Takes the local part of the email, lowercases it, replaces non-alphanumeric
+  characters with underscores, collapses consecutive underscores, strips leading
+  and trailing underscores, and truncates to 20 characters.
+  """
+  def handle_from_email(email) when is_binary(email) do
+    email
+    |> String.split("@")
+    |> List.first("")
+    |> String.downcase()
+    |> String.replace(~r/[^a-z0-9]+/, "_")
+    |> String.replace(~r/_+/, "_")
+    |> String.trim("_")
+    |> String.slice(0, 20)
   end
 end
