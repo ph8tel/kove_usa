@@ -18,8 +18,8 @@
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={@og_title} />
       <meta name="twitter:description" content={assigns[:og_description]} />
-      <%= if hd(assigns[:og_images] || []) do %>
-        <meta name="twitter:image" content={hd(@og_images)} />
+      <%= if List.first(assigns[:og_images] || []) do %>
+        <meta name="twitter:image" content={List.first(@og_images)} />
       <% end %>
     <% end %>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
