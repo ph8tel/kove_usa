@@ -21,11 +21,11 @@ defmodule KoveWeb.RiderPageLive do
         # Build photo slides: rider photos first, then fall back to official hero image
         photos = if user_bike, do: user_bike.images, else: []
 
-        og_image =
+        og_images =
           cond do
-            photos != [] -> List.first(photos).url
-            bike != nil -> Bikes.hero_image_url(bike)
-            true -> nil
+            photos != [] -> Enum.map(photos, & &1.url)
+            bike != nil -> [Bikes.hero_image_url(bike)]
+            true -> []
           end
 
         bike_name = if bike, do: bike.name, else: nil
@@ -61,7 +61,7 @@ defmodule KoveWeb.RiderPageLive do
          |> assign(:page_title, og_title)
          |> assign(:og_title, og_title)
          |> assign(:og_description, og_description)
-         |> assign(:og_image, og_image)
+         |> assign(:og_images, og_images)
          |> assign(:og_url, url(~p"/@#{handle}"))
          |> assign(:handle, handle)
          |> assign(:user, user)
@@ -159,7 +159,7 @@ defmodule KoveWeb.RiderPageLive do
                 <% end %>
                 <%= if @bike.msrp_cents do %>
                   <div class="text-base-content/60">MSRP</div>
-                  <div>{Bikes.format_msrp(@bike)}</div>
+                  <div>{Bikes.format_msrp(@bike.msrp_cents)}</div>
                 <% end %>
               </div>
             </div>
