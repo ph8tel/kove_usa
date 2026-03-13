@@ -69,15 +69,10 @@ test.describe('Rider page — unknown handle', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('Rider page — page structure', () => {
-  let handle: string;
-
-  test.beforeAll(async ({ browser }) => {
-    const page = await browser.newPage();
-    handle = await loginAndGetHandle(page);
-    await page.close();
-  });
+  let handle = '';
 
   test.beforeEach(async ({ page }) => {
+    handle = await loginAndGetHandle(page);
     await page.goto(`/@${handle}`);
     await waitForLiveSocket(page);
   });
@@ -129,12 +124,10 @@ test.describe('Rider page — page structure', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('Rider page — Open Graph meta tags', () => {
-  let handle: string;
+  let handle = '';
 
-  test.beforeAll(async ({ browser }) => {
-    const page = await browser.newPage();
+  test.beforeEach(async ({ page }) => {
     handle = await loginAndGetHandle(page);
-    await page.close();
   });
 
   test('og:title is set', async ({ page }) => {

@@ -21,11 +21,11 @@ defmodule KoveWeb.RiderPageLive do
         # Build photo slides: rider photos first, then fall back to official hero image
         photos = if user_bike, do: user_bike.images, else: []
 
-        og_image =
+        og_images =
           cond do
-            photos != [] -> List.first(photos).url
-            bike != nil -> Bikes.hero_image_url(bike)
-            true -> nil
+            photos != [] -> Enum.map(photos, & &1.url)
+            bike != nil -> [Bikes.hero_image_url(bike)]
+            true -> []
           end
 
         bike_name = if bike, do: bike.name, else: nil
@@ -61,7 +61,7 @@ defmodule KoveWeb.RiderPageLive do
          |> assign(:page_title, og_title)
          |> assign(:og_title, og_title)
          |> assign(:og_description, og_description)
-         |> assign(:og_image, og_image)
+         |> assign(:og_images, og_images)
          |> assign(:og_url, url(~p"/@#{handle}"))
          |> assign(:handle, handle)
          |> assign(:user, user)
@@ -149,15 +149,17 @@ defmodule KoveWeb.RiderPageLive do
               <div class="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
                 <%= if @bike.engine do %>
                   <div class="text-base-content/60">Engine</div>
-                  <div>{@bike.engine.displacement_cc}cc {@bike.engine.engine_type}</div>
+                  <div>{@bike.engine.displacement} {@bike.engine.engine_type}</div>
                   <div class="text-base-content/60">Power</div>
-                  <div>{@bike.engine.peak_power_hp} hp</div>
-                  <div class="text-base-content/60">Torque</div>
-                  <div>{@bike.engine.peak_torque_nm} Nm</div>
+                  <div>{@bike.engine.max_power}</div>
+                  <%= if @bike.engine.max_torque do %>
+                    <div class="text-base-content/60">Torque</div>
+                    <div>{@bike.engine.max_torque}</div>
+                  <% end %>
                 <% end %>
                 <%= if @bike.msrp_cents do %>
                   <div class="text-base-content/60">MSRP</div>
-                  <div>{Bikes.format_msrp(@bike)}</div>
+                  <div>{Bikes.format_msrp(@bike.msrp_cents)}</div>
                 <% end %>
               </div>
             </div>

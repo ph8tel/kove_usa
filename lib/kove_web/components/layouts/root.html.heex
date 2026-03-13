@@ -12,16 +12,14 @@
       <meta property="og:title" content={@og_title} />
       <meta property="og:description" content={assigns[:og_description]} />
       <meta property="og:url" content={assigns[:og_url]} />
-      <%= if assigns[:og_image] do %>
-        <meta property="og:image" content={@og_image} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
+      <%= for img_url <- assigns[:og_images] || [] do %>
+        <meta property="og:image" content={img_url} />
       <% end %>
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={@og_title} />
       <meta name="twitter:description" content={assigns[:og_description]} />
-      <%= if assigns[:og_image] do %>
-        <meta name="twitter:image" content={@og_image} />
+      <%= if List.first(assigns[:og_images] || []) do %>
+        <meta name="twitter:image" content={List.first(@og_images)} />
       <% end %>
     <% end %>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
